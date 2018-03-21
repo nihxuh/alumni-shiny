@@ -1,0 +1,46 @@
+h1 {
+  font-size: 34px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+
+table {
+    border-collapse: separate;
+    border-spacing: 0 0.1em;
+}
+
+td {
+  padding-top: .5em;
+  padding-bottom: .5em;
+  vertical-align: middle;
+}
+
+.table th:not([align]) {
+  text-align: left;
+}
+
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.tabbed-pane {
+  padding-top: 12px;
+}
+
+tr:nth-child(odd)		{ background-color:#eee; }
+tr:nth-child(even)		{ background-color:#fff; }
