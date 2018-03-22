@@ -148,11 +148,13 @@ function(input, output, session) {
     
     # likert plot
     ltAll <- likert(summary=ldAll)
-    p1 <- plot(ltAll, colors=inColors) + ggtitle(titleAll) + theme(plot.title = element_text(hjust = 0.5))
-    p1 <- p1 + guides(fill=guide_legend(title=inType)) + annotate("text", x=dcAll$Item, y = 1, label=dcAll$Count, colour = "white")
+    p1 <- plot(ltAll, colors=inColors, text.size=4) + ggtitle(titleAll) + theme(plot.title = element_text(hjust = 0.5), axis.text=element_text(size=12,face="bold"))
+    p1 <- p1 + guides(fill=guide_legend(title=inType)) + geom_label(data=dcAll, aes(x=Item, y = 1, label=Count))
+          # annotate("text", x=dcAll$Item, y = 1, label=dcAll$Count, colour = "#e6e600", fontface =2)
     ltCat <- likert(summary=ldCat)
-    p2 <- plot(ltCat, colors=inColors, ordered = FALSE) + ggtitle(titleCat) + theme(plot.title = element_text(hjust = 0.5))
-    p2 <- p2 + guides(fill=guide_legend(title=inType)) + annotate("text", x=dcCat$Item, y = 1, label=dcCat$Count, colour = "white")
+    p2 <- plot(ltCat, colors=inColors, ordered = FALSE, text.size=4) + ggtitle(titleCat) + theme(plot.title = element_text(hjust = 0.5), axis.text=element_text(size=12,face="bold"))
+    p2 <- p2 + guides(fill=guide_legend(title=inType)) + geom_label(data=dcCat, aes(x=Item, y = 1, label=Count))
+          # annotate("text", x=dcCat$Item, y = 1, label=dcCat$Count, colour = "#e6e600", fontface =2)
     
     grid.arrange(p1, p2, nrow=2, heights=c(3, 7))
   }
@@ -229,7 +231,7 @@ function(input, output, session) {
   },height=dmHeight,width=dmWidth)
   output$genderLtTxt  <- renderText({HTML("<p><strong>Likert Plot of Gender Distribution.</strong> <em>Upper panel</em>: Relative percentages of male and female NIEHS alumni in the selected time period(s).
                                           <em>Lower panel</em>: Relative percentages of male and female NIEHS alumni in each job category during selected time period(s). 
-                                          The sum of male and female percentages in each row equals 100%.</p><p>&nbsp;</p>")})
+                                          The sum of male and female percentages in each row equals 100%. The number in the middle of each row indicates total number of alumni in a job category.</p><p>&nbsp;</p>")})
 
   output$genderPbPlot <- renderPlot({
     # choose data based on input$selectDmTp from ui.R
@@ -430,7 +432,7 @@ function(input, output, session) {
   },height=dmHeight,width=dmWidth)
   output$visitLtTxt  <- renderText({HTML("<p><strong>Likert Plot of Country Origin Distribution.</strong> <em>Upper panel</em>: Relative percentages of US and international alumni in the selected time period(s).
                                           <em>Lower panel</em>: Relative percentages of US and international alumni in each job category during selected time period(s). 
-                                          The sum of US and international percentages in each row equals 100%.</p><p>&nbsp;</p>")})
+                                          The sum of US and international percentages in each row equals 100%. The number in the middle of each row indicates total number of alumni in a job category.</p><p>&nbsp;</p>")})
   
   output$visitPbPlot <- renderPlot({
     # choose data based on input$selectDmTp from ui.R
@@ -960,7 +962,7 @@ function(input, output, session) {
                  "Trainee" ="#5e7e37", 
                  "Unknown or Undecided"="#89c658")
   
-  colorJSpec = c("Additional postdoctoral training"="#225f7b",
+  colorJSpec = c("Additional postdoc"="#225f7b",
                  "Computation/informatics"="#a792c5",
                  "Primarily applied research"="#8b9fd1",
                  "Primarily basic research"="#243e7d",
@@ -969,7 +971,7 @@ function(input, output, session) {
                  "Regulatory affairs"="#23787a",
                  "REST COMBINED"="#47427e",
                  "Science admin./PMT"="#85357a",
-                 "Science writing or communications"="#c06aaa",
+                 "Science writing or comm."="#c06aaa",
                  "Technical/customer support"="#4bc4d2",
                  "Unknown or Undecided"="#8dbbd8")
   
@@ -2057,14 +2059,15 @@ function(input, output, session) {
   output$tmSpecTable <- renderTable({
     # choose data based on input$selectTmTp from ui.R
     if (input$selectTmTp == 'Left NIEHS in 2000-2014') {
-      tmSpec <- dfTimeTypeAll
+      tmSpec <- dfTimeSpecAll
     }
     else if (input$selectTmTp == 'Trend') {
-      tmSpec <- dfTimeTypeYrs
+      tmSpec <- dfTimeSpecYrs
     }
     else {
-      tmSpec <- dfTimeTypeYrs[dfTimeTypeYrs$years == timeConvert(input$selectTmTp), ]
+      tmSpec <- dfTimeSpecYrs[dfTimeSpecYrs$years == timeConvert(input$selectTmTp), ]
     }
+    
     tmSpec
   })  
   
@@ -3590,7 +3593,7 @@ function(input, output, session) {
   
   output$rawtable <- renderPrint({
     orig <- options(width = 1000)
-    print(head(dataGroup, 25))
+    print(head(dataGroup, 5))
     options(orig)
   })
 }

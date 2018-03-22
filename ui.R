@@ -416,11 +416,18 @@ body <- dashboardBody(
     
     
     #####
+    # tabItem("rawdata",
+    #   "Only the top 25 rows are shown here. But the download contains whole data.",
+    #   verbatimTextOutput("rawtable"),
+    #   downloadButton("downloadCsv", "Download as CSV")
+    # )
+    
     tabItem("rawdata",
-      "Only the top 25 rows are shown here. But the download contains whole data.",
-      verbatimTextOutput("rawtable"),
-      downloadButton("downloadCsv", "Download as CSV")
+            "Only the top 5 rows are shown here. Download of whole data is disabled due to privacy concerns.",
+            verbatimTextOutput("rawtable")
+            # downloadButton("downloadCsv", "Download as CSV")
     )
+    
   )
 )
 

@@ -33,12 +33,19 @@ nameInstitute <- dataGroup$institute[1]
 # convert long name of job specifics to short name
 dataGroup$specifics <- as.character(dataGroup$specifics)
 dataGroup$specifics[dataGroup$specifics == 'Science administration/project management'] <- "Science admin./PMT"
+dataGroup$specifics[dataGroup$specifics == 'Science writing or communications'] <- 'Science writing or comm.'
+dataGroup$specifics[dataGroup$specifics == 'Additional postdoctoral training'] <- 'Additional postdoc'
 dataGroup$specifics <- factor(dataGroup$specifics)
 
 # convert long name of job sector to short name
 dataGroup$job_sector <- as.character(dataGroup$job_sector)
 dataGroup$job_sector[dataGroup$job_sector == 'Independent/self-employed'] <- "Indep./self-employed"
 dataGroup$job_sector <- factor(dataGroup$job_sector)
+
+# (3/22/18) replace "Unknown" with "Degree Unknown" in "degree_category"
+dataGroup$degree_category <- as.character(dataGroup$degree_category)
+dataGroup$degree_category[dataGroup$degree_category == 'Unknown'] <- "Degree Unknown"
+dataGroup$degree_category <- factor(dataGroup$degree_category)
 
 
 # get the time period data for UI
