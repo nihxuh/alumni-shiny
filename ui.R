@@ -389,8 +389,8 @@ body <- dashboardBody(
           title = "DOCTORAL DEGREE FIELD OF STUDY", width = 12, solidHeader = TRUE,
           HTML("We also find career outcome differences between individuals in different fields of study.  
                In the graphs below, we used a threshold of N>10 in order for a field of study to be displayed in the
-                 'total' year graph (2000-2014).  We used a threshold of N>5 in order for a field of study to be displayed in the '5-year 
-                 period' graphs (ex:  2000-2004, 2005-2009, or 2010-2014).  The 95% <a href='https://en.wikipedia.org/wiki/Confidence_interval'>confidence intervals</a> of the binomial proportion are 
+                 'total' year graph (2000-2014).  We used a threshold of N>5 in order for a field of study to be displayed in the '5-year
+                 period' graphs (ex:  2000-2004, 2005-2009, or 2010-2014).  The 95% <a target='_blank' href='https://en.wikipedia.org/wiki/Confidence_interval'>confidence intervals</a> of the binomial proportion are
                  shown.")
         )
       ),
