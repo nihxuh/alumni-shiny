@@ -426,7 +426,7 @@ function(input, output, session) {
       else {
         titleAll = paste0("Country origin distribution in all data \n", selectYears)
         titleCat = paste0("Country origin distribution in each job specifics \n", selectYears)
-        likertHelper(pltCtzAll, pltCtzSpec, 'Country', titleAll, titleCat, visitColors)
+        likertHelper(pltCtzAll, pltCtzSpe, 'Country', titleAll, titleCat, visitColors)
       }
     }
   },height=dmHeight,width=dmWidth)
