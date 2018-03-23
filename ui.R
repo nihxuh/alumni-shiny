@@ -265,7 +265,7 @@ body <- dashboardBody(
                         choices = list("All"=1, "Job Sector"=2, "Job Type"=3, "Job Specifics"=4), selected = 1)
           ),
           column(4, align="center",
-                 sliderInput("sldWidthGnr", "Plot Width (px)", min = 0, max = 1200, value = 400)
+                 sliderInput("sldWidthGnr", "Plot Width (px)", min = 0, max = 1200, value = 500)
           ),
           column(4, align="center",
                  sliderInput("sldHeightGnr", "Plot Height (px)", min = 0, max = 1200, value = 400)
@@ -312,7 +312,7 @@ body <- dashboardBody(
                         choices = list("Tenure track"=1, "Additional postdoc"=3, "Both"=2), selected = 2)
           ),
           column(4, align="center",
-                 sliderInput("sldWidthHl", "Plot Width (px)", min = 0, max = 1200, value = 400)
+                 sliderInput("sldWidthHl", "Plot Width (px)", min = 0, max = 1200, value = 500)
           ),
           column(4, align="center",
                  sliderInput("sldHeightHl", "Plot Height (px)", min = 0, max = 1200, value = 400)

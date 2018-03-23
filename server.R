@@ -1829,8 +1829,8 @@ function(input, output, session) {
           title = "Additional postdoc", width = 12,
           # The id lets us use input$tab_hlAT on the server to find the current tab
           id = "tab_hlAT",
-          tabPanel("Additional postdoc plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("hlTrainTxt"), sunburstOutput("hlTrainPlot", width = input$sldWidthHl, height = input$sldHeightHl)),
-          tabPanel("Additional postdoc data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("hlTrainTable"))
+          tabPanel("Addt'l postdoc plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("hlTrainTxt"), sunburstOutput("hlTrainPlot", width = input$sldWidthHl, height = input$sldHeightHl)),
+          tabPanel("Addt'l postdoc data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("hlTrainTable"))
         )
       )
     }
@@ -1848,8 +1848,8 @@ function(input, output, session) {
           title = "Additional postdoc",
           # The id lets us use input$tab_hlATSml on the server to find the current tab
           id = "tab_hlATSml",
-          tabPanel("Additional postdoc plot", style = "overflow-x:scroll; overflow-y:scroll; height: 600px", htmlOutput("hlTrainTxt"), sunburstOutput("hlTrainPlot", width = input$sldWidthHl, height = input$sldHeightHl)),
-          tabPanel("Additional postdoc data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("hlTrainTable"))
+          tabPanel("Addt'l postdoc plot", style = "overflow-x:scroll; overflow-y:scroll; height: 600px", htmlOutput("hlTrainTxt"), sunburstOutput("hlTrainPlot", width = input$sldWidthHl, height = input$sldHeightHl)),
+          tabPanel("Addt'l postdoc data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("hlTrainTable"))
         )
       )
     }
@@ -2258,7 +2258,13 @@ function(input, output, session) {
   }
   ctWidth <- function() {
     input$sldWidthCt
-  }  
+  } 
+  
+  # (3/22/18) hard code top sector, top type, top specifics
+  setSect <- 'Academic institution'
+  setType <- 'Tenure track faculty'
+  setSpec <- 'Primarily basic research'
+  
   
   # job category plot for top countries
   output$cntrJobPlot <- renderPlot({
@@ -2272,15 +2278,15 @@ function(input, output, session) {
     # count job_sector
     ccSctCnt <- topData %>% group_by(job_sector) %>% summarise (cnt = n())
     # topSect <- ccSctCnt$job_sector[ccSctCnt$cnt == max(ccSctCnt$cnt)]
-    topSect <- 'Academic institution'
+    topSect <- setSect
     # count job_type
     ccTypCnt <- topData %>% group_by(job_type) %>% summarise (cnt = n())
     # topType <- ccTypCnt$job_type[ccTypCnt$cnt == max(ccTypCnt$cnt)]
-    topType <- 'Tenure track faculty'
+    topType <- setType
     # count job_specifics
     ccSpcCnt <- topData %>% group_by(specifics) %>% summarise (cnt = n())
     # topSpec <- ccSpcCnt$specifics[ccSpcCnt$cnt == max(ccSpcCnt$cnt)]
-    topSpec <- 'Primarily basic research'
+    topSpec <- setSpec
     
     if (input$selectCtPc == 1) {
       ccSctAll <- topData %>% group_by(country_origin, job_sector) %>% summarise (cnt = n()) %>% mutate(percent=cnt/sum(cnt)) %>% group_by(country_origin) %>% mutate(catcnt=sum(cnt))
@@ -2443,14 +2449,14 @@ function(input, output, session) {
     }
     # count job_sector
     ccSctCnt <- topData %>% group_by(job_sector) %>% summarise (cnt = n())
-    topSect <- ccSctCnt$job_sector[ccSctCnt$cnt == max(ccSctCnt$cnt)]
+    topSect <- setSect
     # count job_type
     ccTypCnt <- topData %>% group_by(job_type) %>% summarise (cnt = n())
     # topType <- ccTypCnt$job_type[ccTypCnt$cnt == max(ccTypCnt$cnt)]
-    topType <- 'Tenure track faculty'
+    topType <- setType
     # count job_specifics
     ccSpcCnt <- topData %>% group_by(specifics) %>% summarise (cnt = n())
-    topSpec <- ccSpcCnt$specifics[ccSpcCnt$cnt == max(ccSpcCnt$cnt)]
+    topSpec <- setSpec
     
     if (input$selectCtPc == 1) {
       ccSctAll <- topData %>% group_by(country_origin, job_sector) %>% summarise (cnt = n()) %>% mutate(percent=cnt/sum(cnt)) %>% group_by(country_origin) %>% mutate(catcnt=sum(cnt))
@@ -2605,14 +2611,14 @@ function(input, output, session) {
     }
     # count job_sector
     ccSctCnt <- topData %>% group_by(job_sector) %>% summarise (cnt = n())
-    topSect <- ccSctCnt$job_sector[ccSctCnt$cnt == max(ccSctCnt$cnt)]
+    topSect <- setSect
     # count job_type
     ccTypCnt <- topData %>% group_by(job_type) %>% summarise (cnt = n())
     # topType <- ccTypCnt$job_type[ccTypCnt$cnt == max(ccTypCnt$cnt)]
-    topType <- 'Tenure track faculty'
+    topType <- setType
     # count job_specifics
     ccSpcCnt <- topData %>% group_by(specifics) %>% summarise (cnt = n())
-    topSpec <- ccSpcCnt$specifics[ccSpcCnt$cnt == max(ccSpcCnt$cnt)]
+    topSpec <- setSpec
     
     if (input$selectCtPc == 1) {
       ccSctAll <- topData %>% group_by(country_origin, job_sector) %>% summarise (cnt = n()) %>% mutate(percent=cnt/sum(cnt)) %>% group_by(country_origin) %>% mutate(catcnt=sum(cnt))
@@ -2803,14 +2809,14 @@ function(input, output, session) {
     }
     # count job_sector
     ccSctCnt <- topData %>% group_by(job_sector) %>% summarise (cnt = n())
-    topSect <- ccSctCnt$job_sector[ccSctCnt$cnt == max(ccSctCnt$cnt)]
+    topSect <- setSect
     # count job_type
     ccTypCnt <- topData %>% group_by(job_type) %>% summarise (cnt = n())
     # topType <- ccTypCnt$job_type[ccTypCnt$cnt == max(ccTypCnt$cnt)]
-    topType <- 'Tenure track faculty'
+    topType <- setType
     # count job_specifics
     ccSpcCnt <- topData %>% group_by(specifics) %>% summarise (cnt = n())
-    topSpec <- ccSpcCnt$specifics[ccSpcCnt$cnt == max(ccSpcCnt$cnt)]
+    topSpec <- setSpec
     
     if (input$selectCtPc == 1) {
       ccSctAll <- topData %>% group_by(country_origin, job_sector) %>% summarise (cnt = n()) %>% mutate(percent=cnt/sum(cnt)) %>% group_by(country_origin) %>% mutate(catcnt=sum(cnt))
@@ -3114,7 +3120,8 @@ function(input, output, session) {
     
     if (input$selectCtPc == 1) {
       ccSctAll <- topData %>% group_by(job_sector) %>% summarise (cnt = n()) %>% mutate(percent=cnt/sum(cnt))
-      topSect <- ccSctAll$job_sector[ccSctAll$cnt == max(ccSctAll$cnt)]
+      # topSect <- ccSctAll$job_sector[ccSctAll$cnt == max(ccSctAll$cnt)]
+      topSect <- setSect
 
       # mean time
       mt2 <- aggregate(months_postdoc~job_sector,data=topData,FUN=mean)
@@ -3148,7 +3155,8 @@ function(input, output, session) {
     }
     else if (input$selectCtPc == 2) {
       ccSctAll <- topData %>% group_by(job_type) %>% summarise (cnt = n()) %>% mutate(percent=cnt/sum(cnt))
-      topType <- ccSctAll$job_type[ccSctAll$cnt == max(ccSctAll$cnt)]
+      # topType <- ccSctAll$job_type[ccSctAll$cnt == max(ccSctAll$cnt)]
+      topType <- setType
       
       # mean time
       mt2 <- aggregate(months_postdoc~job_type,data=topData,FUN=mean)
@@ -3182,7 +3190,8 @@ function(input, output, session) {
     }
     else {
       ccSctAll <- topData %>% group_by(specifics) %>% summarise (cnt = n()) %>% mutate(percent=cnt/sum(cnt))
-      topSpec <- ccSctAll$specifics[ccSctAll$cnt == max(ccSctAll$cnt)]
+      # topSpec <- ccSctAll$specifics[ccSctAll$cnt == max(ccSctAll$cnt)]
+      topSpec <- setSpec
       
       # mean time
       mt2 <- aggregate(months_postdoc~specifics,data=topData,FUN=mean)
@@ -3216,10 +3225,10 @@ function(input, output, session) {
     }
     
 
-    box(title = paste0("General Distribution of ", boxData[[1]]),
+    box(title = paste0("General Distribution of Selected ", boxData[[1]]),
       width = 12,
       fluidRow(
-        valueBox(subtitle="Percent in the job category", value=tags$p(paste0(round(boxData[[2]],3)*100,"%"),style="font-size:75%;"), icon = icon("th-large"), color = "maroon", width=3),
+        valueBox(subtitle="Percent in this selected job", value=tags$p(paste0(round(boxData[[2]],3)*100,"%"),style="font-size:75%;"), icon = icon("th-large"), color = "maroon", width=3),
         valueBox(subtitle="Average training time (months)", value=tags$p(round(boxData[[3]],1),style="font-size:75%;"), icon = icon("hourglass-3"), color = "purple", width=3),
         valueBox(subtitle="Percent male", value=tags$p(paste0(round(boxData[[4]],3)*100,"%"),style="font-size:75%;"), icon = icon("male"), color = "blue", width=3),
         valueBox(subtitle="Percent working in US ", value=tags$p(paste0(round(boxData[[5]],3)*100,"%"),style="font-size:75%;"), icon = icon("home"), color = "green", width=3)
