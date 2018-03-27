@@ -9,6 +9,13 @@ function(input, output, session) {
     sapply(new_stringvector,FUN = function(x) {paste(strwrap(x,width=width), collapse="\n")})
   }
   
+  # (3/26/18) change data table header
+  changeTableHeader <- function(inTable, newHeader) {
+    outTable = inTable
+    colnames(outTable) <- newHeader
+    return(outTable)
+  }
+  
   # (1/22/18 hack) convert time period
   timeConvert <- function(disp_time) {
     dfTime <- data.frame("key" = c('Left NIEHS in 2000-2004',
@@ -322,24 +329,24 @@ function(input, output, session) {
     # choose data based on input$selectGt from ui.R
     if (input$selectDmTp == 'Left NIEHS in 2000-2014') {
       if (input$selectDmPc == 1) {
-        gend4Sect
+        changeTableHeader(gend4Sect, c('Job_Sector','Female','Male'))
       }
       else if (input$selectDmPc == 2) {
-        gend4Type
+        changeTableHeader(gend4Type, c('Job_Type','Female','Male'))
       }
       else {
-        gend4Spec
+        changeTableHeader(gend4Spec, c('Job_Specifics','Female','Male'))
       }
     }
     else if (input$selectDmTp == 'Trend') {
       if (input$selectDmPc == 1) {
-        gendYrSect
+        changeTableHeader(gendYrSect, c('Years','Job_Sector','Female','Male'))
       }
       else if (input$selectDmPc == 2) {
-        gendYrType
+        changeTableHeader(gendYrType, c('Years','Job_Type','Female','Male'))
       }
       else {
-        gendYrSpec
+        changeTableHeader(gendYrSpec, c('Years','Job_Specifics','Female','Male'))
       }
     }
     else {
@@ -348,13 +355,13 @@ function(input, output, session) {
       pltGndTyp <- subset(gendYrType, years == selectYears)
       pltGndSpe <- subset(gendYrSpec, years == selectYears)
       if (input$selectDmPc == 1) {
-        pltGndSec
+        changeTableHeader(pltGndSec, c('Years','Job_Sector','Female','Male'))
       }
       else if (input$selectDmPc == 2) {
-        pltGndTyp
+        changeTableHeader(pltGndTyp, c('Years','Job_Type','Female','Male'))
       }
       else {
-        pltGndSpe
+        changeTableHeader(pltGndSpe, c('Years','Job_Specifics','Female','Male'))
       }
     }
   }, digits = 0)
@@ -521,24 +528,24 @@ function(input, output, session) {
     # choose data based on input$selectGt from ui.R
     if (input$selectDmTp == 'Left NIEHS in 2000-2014') {
       if (input$selectDmPc == 1) {
-        citi4Sect
+        changeTableHeader(citi4Sect, c('Job_Sector','International','US'))
       }
       else if (input$selectDmPc == 2) {
-        citi4Type
+        changeTableHeader(citi4Type, c('Job_Type','International','US'))
       }
       else {
-        citi4Spec
+        changeTableHeader(citi4Spec, c('Job_Specifics','International','US'))
       }
     }
     else if (input$selectDmTp == 'Trend') {
       if (input$selectDmPc == 1) {
-        citiYrSect
+        changeTableHeader(citiYrSect, c('Years','Job_Sector','International','US'))
       }
       else if (input$selectDmPc == 2) {
-        citiYrType
+        changeTableHeader(citiYrType, c('Years','Job_Type','International','US'))
       }
       else {
-        citiYrSpec
+        changeTableHeader(citiYrSpec, c('Years','Job_Specifics','International','US'))
       }
     }
     else {
@@ -546,13 +553,13 @@ function(input, output, session) {
       pltCtzTyp <- subset(citiYrType, years == timeConvert(input$selectDmTp))
       pltCtzSpe <- subset(citiYrSpec, years == timeConvert(input$selectDmTp))
       if (input$selectDmPc == 1) {
-        pltCtzSec
+        changeTableHeader(pltCtzSec, c('Years','Job_Sector','International','US'))
       }
       else if (input$selectDmPc == 2) {
-        pltCtzTyp
+        changeTableHeader(pltCtzTyp, c('Years','Job_Type','International','US'))
       }
       else {
-        pltCtzSpe
+        changeTableHeader(pltCtzSpe, c('Years','Job_Specifics','International','US'))
       }
     }
   }, digits = 0)
@@ -825,12 +832,13 @@ function(input, output, session) {
   output$stateTable <- renderTable({
     slctYear <- timeConvert(input$selectLcTp)
     if (input$selectLcTp == 'Left NIEHS in 2000-2014') {
-      stData <- dfStateAll
+      stData <- changeTableHeader(dfStateAll,c('State','Alumni_Count'))
     }
     else {
-      stData <- dfStateYrs[dfStateYrs$years == slctYear, ]
+      stData <- changeTableHeader(dfStateYrs[dfStateYrs$years == slctYear, ], c('Years','State','Alumni_Count'))
     }
-    setDT(stData)[order(-value)]
+    
+    setDT(stData)[order(-Alumni_Count)]
   })
   
   #>>> location dynamic UI
@@ -1114,13 +1122,13 @@ function(input, output, session) {
   # output job sector table
   output$jobSectTable <- renderTable({
     if (input$selectGnrTp == 'Left NIEHS in 2000-2014') {
-      jscData <- dfJobSectAll
+      jscData <- changeTableHeader(dfJobSectAll,c('Job_Sector','Alumni_Count','Alumni_Portion'))
     }
     else if (input$selectGnrTp == 'Trend') {
-      jscData <- dfJobSectYrs
+      jscData <- changeTableHeader(dfJobSectYrs,c('Years','Job_Sector','Alumni_Count','Alumni_Portion'))
     }
     else {
-      jscData <- dfJobSectYrs[dfJobSectYrs$years == timeConvert(input$selectGnrTp), ]
+      jscData <- changeTableHeader(dfJobSectYrs[dfJobSectYrs$years == timeConvert(input$selectGnrTp), ],c('Years','Job_Sector','Alumni_Count','Alumni_Portion'))
     }
     jscData
   })
@@ -1264,13 +1272,13 @@ function(input, output, session) {
   # output job type table
   output$jobTypeTable <- renderTable({
     if (input$selectGnrTp == 'Left NIEHS in 2000-2014') {
-      jtpData <- dfJobTypeAll
+      jtpData <- changeTableHeader(dfJobTypeAll,c('Job_Type','Alumni_Count','Alumni_Portion'))
     }
     else if (input$selectGnrTp == 'Trend') {
-      jtpData <- dfJobTypeYrs
+      jtpData <- changeTableHeader(dfJobTypeYrs,c('Years','Job_Type','Alumni_Count','Alumni_Portion'))
     }
     else {
-      jtpData <- dfJobTypeYrs[dfJobTypeYrs$years == timeConvert(input$selectGnrTp), ]
+      jtpData <- changeTableHeader(dfJobTypeYrs[dfJobTypeYrs$years == timeConvert(input$selectGnrTp), ],c('Years','Job_Type','Alumni_Count','Alumni_Portion'))
     }
     jtpData
   })
@@ -1352,7 +1360,7 @@ function(input, output, session) {
     }
     
     talDAT = nrow(gnrData)
-    cntRSC = sum(gnrData$specifics %in% c('Primarily basic research','Primarily applied research','Primarily clinical research','Computation/informatics','Additional postdoctoral training'))
+    cntRSC = sum(gnrData$specifics %in% c('Primarily basic research','Primarily applied research','Primarily clinical research','Computation/informatics','Additional postdoc'))
     pctRSC = round(cntRSC / talDAT, 3) * 100
 
     HTML(paste0("<p><strong>Career Outcomes in Different Job Specifics</strong> In ", slctYear, ", ", pctRSC,
@@ -1401,7 +1409,7 @@ function(input, output, session) {
     }
     
     talDAT = nrow(gnrData)
-    cntRSC = sum(gnrData$specifics %in% c('Primarily basic research','Primarily applied research','Primarily clinical research','Computation/informatics','Additional postdoctoral training'))
+    cntRSC = sum(gnrData$specifics %in% c('Primarily basic research','Primarily applied research','Primarily clinical research','Computation/informatics','Additional postdoc'))
     pctRSC = round(cntRSC / talDAT, 3) * 100
     
     HTML(paste0("<p><strong>Career Outcomes in Different Job Specifics (Bar Chart)</strong> In ", slctYear, ", ", pctRSC,
@@ -1414,13 +1422,13 @@ function(input, output, session) {
   # output job specifics table
   output$jobSpecTable <- renderTable({
     if (input$selectGnrTp == 'Left NIEHS in 2000-2014') {
-      jspData <- dfJobSpecAll
+      jspData <- changeTableHeader(dfJobSpecAll,c('Job_Specifics','Alumni_Count','Alumni_Portion'))
     }
     else if (input$selectGnrTp == 'Trend') {
-      jspData <- dfJobSpecYrs
+      jspData <- changeTableHeader(dfJobSpecYrs,c('Years','Job_Specifics','Alumni_Count','Alumni_Portion'))
     }
     else {
-      jspData <- dfJobSpecYrs[dfJobSpecYrs$years == timeConvert(input$selectGnrTp), ]
+      jspData <- changeTableHeader(dfJobSpecYrs[dfJobSpecYrs$years == timeConvert(input$selectGnrTp), ],c('Years','Job_Specifics','Alumni_Count','Alumni_Portion'))
     }
     jspData
   })
@@ -1645,7 +1653,7 @@ function(input, output, session) {
     colnames(dataTypSpe)[colnames(dataTypSpe)=="specifics"] <- "to"
     
     dataSK <- bind_rows(as.data.frame(dataSecTyp), as.data.frame(dataTypSpe))
-    colnames(dataSK) <- c('Job population','Job subpopulation','Count')
+    colnames(dataSK) <- c('Job_Population','Job_Subpopulation','Alumni_Count')
     dataSK
   })
   
@@ -1732,7 +1740,7 @@ function(input, output, session) {
     skData_tt$job_country = factor(skData_tt$job_country)
     skData_tbl <- skData_tt %>% group_by(citizenship, job_country) %>% summarise(cnt = n())
     skData_tbl <- data.frame(skData_tbl) %>% mutate(freq=cnt/sum(cnt))
-    skData_tbl
+    changeTableHeader(skData_tbl,c('Origin_Country','Job_Country','Alumni_Count','Alumni_Portion'))
   })
   
   # additional training plot
@@ -1806,7 +1814,7 @@ function(input, output, session) {
     skData_tt$job_country = factor(skData_tt$job_country)
     skData_tbl <- skData_tt %>% group_by(citizenship, job_country) %>% summarise(cnt = n())
     skData_tbl <- data.frame(skData_tbl) %>% mutate(freq=cnt/sum(cnt))
-    skData_tbl
+    changeTableHeader(skData_tbl,c('Origin_Country','Job_Country','Alumni_Count','Alumni_Portion'))
   })
   
   output$hlDynamicUI<-renderUI({
@@ -1870,16 +1878,18 @@ function(input, output, session) {
       tmSect <- dataGroup
       time.sct = aggregate(months_postdoc ~ job_sector, tmSect, median)
       colnames(time.sct)[colnames(time.sct)=="months_postdoc"] <- "Median_time"
+      time.sct$sct_num = as.numeric(time.sct$job_sector)
       p <- ggplot(tmSect, aes(x = job_sector, y = months_postdoc, fill = job_sector)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.sct, aes(label=round(Median_time,1), y = Median_time), color="white")
+      p <- p + coord_flip() + geom_text(data=time.sct, aes(label=round(Median_time,1), x=sct_num+0.4, y = Median_time))
       p <- p + scale_fill_manual(values=colorJSect)
     }
     else if (input$selectTmTp == 'Trend') {
       tmSect <- dataGroup
       time.sct = aggregate(months_postdoc ~ years + job_sector, tmSect, median)
       colnames(time.sct)[colnames(time.sct)=="months_postdoc"] <- "Median_time"
+      time.sct$sct_num = as.numeric(time.sct$job_sector)
       p <- ggplot(tmSect, aes(x = years, y = months_postdoc, fill = years)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.sct, aes(label=round(Median_time,1), y = Median_time), color="white")
+      p <- p + coord_flip() + geom_text(data=time.sct, aes(label=round(Median_time,1), x=sct_num+0.4, y = Median_time))
       p <- p + facet_grid(job_sector ~ .)
       p <- p + theme(strip.text.y = element_text(size=10, face="bold"))
     }
@@ -1887,17 +1897,14 @@ function(input, output, session) {
       tmSect <- dataGroup[dataGroup$years == timeConvert(input$selectTmTp), ]
       time.sct = aggregate(months_postdoc ~ job_sector, tmSect, median)
       colnames(time.sct)[colnames(time.sct)=="months_postdoc"] <- "Median_time"
+      time.sct$sct_num = as.numeric(time.sct$job_sector)
       p <- ggplot(tmSect, aes(x = job_sector, y = months_postdoc, fill = job_sector)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.sct, aes(label=round(Median_time,1), y = Median_time), color="white")
+      p <- p + coord_flip() + geom_text(data=time.sct, aes(label=round(Median_time,1), x=sct_num+0.4, y = Median_time))
       p <- p + scale_fill_manual(values=colorJSect)
     }
     p <- p + ggtitle("Training Time (months)") + theme(legend.position="none") +
-          # labs(y='Months', x='Job Sector')
           labs(y='Months', x='')
-    # ggp_build <- plotly_build(p)
-    # ggp_build$layout$height = input$sldHeightTm
-    # ggp_build$layout$width = input$sldWidthTm - 10
-    gp <- ggplotly(p, width = input$sldWidthTm, height = input$sldHeightTm, tooltip=c("x", "Median_time"))
+    gp <- ggplotly(p, width = input$sldWidthTm, height = input$sldHeightTm, tooltip=c("Median_time"))
     gp # %>% layout(margin = list(l = 75))
   })
   
@@ -1921,13 +1928,13 @@ function(input, output, session) {
   output$tmSectTable <- renderTable({
     # choose data based on input$selectTmTp from ui.R
     if (input$selectTmTp == 'Left NIEHS in 2000-2014') {
-      tmSect <- dfTimeSectAll
+      tmSect <- changeTableHeader(dfTimeSectAll,c('Job_Sector','Avg_Time','Min_Time','Max_Time','Alumni_Count'))
     }
     else if (input$selectTmTp == 'Trend') {
-      tmSect <- dfTimeSectYrs
+      tmSect <- changeTableHeader(dfTimeSectYrs,c('Years','Job_Sector','Avg_Time','Min_Time','Max_Time','Alumni_Count'))
     }
     else {
-      tmSect <- dfTimeSectYrs[dfTimeSectYrs$years ==timeConvert( input$selectTmTp), ]
+      tmSect <- changeTableHeader(dfTimeSectYrs[dfTimeSectYrs$years ==timeConvert( input$selectTmTp), ],c('Years','Job_Sector','Avg_Time','Min_Time','Max_Time','Alumni_Count'))
     }
     tmSect
   })
@@ -1939,16 +1946,18 @@ function(input, output, session) {
       tmType <- dataGroup
       time.typ = aggregate(months_postdoc ~ job_type, tmType, median)
       colnames(time.typ)[colnames(time.typ)=="months_postdoc"] <- "Median_time"
+      time.typ$typ_num = as.numeric(time.typ$job_type)
       p <- ggplot(tmType, aes(x = job_type, y = months_postdoc, fill = job_type)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.typ, aes(label=round(Median_time,1), y = Median_time), color="white")
+      p <- p + coord_flip() + geom_text(data=time.typ, aes(label=round(Median_time,1), x=typ_num+0.4, y = Median_time))
       p <- p + scale_fill_manual(values=colorJType)
     }
     else if (input$selectTmTp == 'Trend') {
       tmType <- dataGroup
       time.typ = aggregate(months_postdoc ~ years + job_type, tmType, median)
       colnames(time.typ)[colnames(time.typ)=="months_postdoc"] <- "Median_time"
+      time.typ$typ_num = as.numeric(time.typ$job_type)
       p <- ggplot(tmType, aes(x = years, y = months_postdoc, fill = years)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.typ, aes(label=round(Median_time,1), y = Median_time), color="white")
+      p <- p + coord_flip() + geom_text(data=time.typ, aes(label=round(Median_time,1), x=typ_num+0.4, y = Median_time))
       p <- p + facet_grid(job_type ~ .)
       p <- p + theme(strip.text.y = element_text(size=10, face="bold"))
     }
@@ -1956,17 +1965,14 @@ function(input, output, session) {
       tmType <- dataGroup[dataGroup$years == timeConvert(input$selectTmTp), ]
       time.typ = aggregate(months_postdoc ~ job_type, tmType, median)
       colnames(time.typ)[colnames(time.typ)=="months_postdoc"] <- "Median_time"
+      time.typ$typ_num = as.numeric(time.typ$job_type)
       p <- ggplot(tmType, aes(x = job_type, y = months_postdoc, fill = job_type)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.typ, aes(label=round(Median_time,1), y = Median_time), color="white")
+      p <- p + coord_flip() + geom_text(data=time.typ, aes(label=round(Median_time,1), x=typ_num+0.4, y = Median_time))
       p <- p + scale_fill_manual(values=colorJType)
     }
     p <- p + ggtitle("Training Time (months)") + theme(legend.position="none") +
-      # labs(y='Months', x='Job Type')
       labs(y='Months', x='')
-    # ggp_build <- plotly_build(p)
-    # ggp_build$layout$height = input$sldHeightTm
-    # ggp_build$layout$width = input$sldWidthTm - 10
-    gp <- ggplotly(p, width = input$sldWidthTm, height = input$sldHeightTm, tooltip=c("x", "Median_time"))
+    gp <- ggplotly(p, width = input$sldWidthTm, height = input$sldHeightTm, tooltip=c("Median_time"))
     gp # %>% layout(margin = list(l = 75))
   })
   
@@ -1990,13 +1996,13 @@ function(input, output, session) {
   output$tmTypeTable <- renderTable({
     # choose data based on input$selectTmTp from ui.R
     if (input$selectTmTp == 'Left NIEHS in 2000-2014') {
-      tmType <- dfTimeTypeAll
+      tmType <- changeTableHeader(dfTimeTypeAll,c('Job_Type','Avg_Time','Min_Time','Max_Time','Alumni_Count'))
     }
     else if (input$selectTmTp == 'Trend') {
-      tmType <- dfTimeTypeYrs
+      tmType <- changeTableHeader(dfTimeTypeYrs,c('Years','Job_Type','Avg_Time','Min_Time','Max_Time','Alumni_Count'))
     }
     else {
-      tmType <- dfTimeTypeYrs[dfTimeTypeYrs$years == timeConvert(input$selectTmTp), ]
+      tmType <- changeTableHeader(dfTimeTypeYrs[dfTimeTypeYrs$years == timeConvert(input$selectTmTp), ],c('Years','Job_Type','Avg_Time','Min_Time','Max_Time','Alumni_Count'))
     }
     tmType
   })
@@ -2008,16 +2014,18 @@ function(input, output, session) {
       tmSpec <- dataGroup
       time.spc = aggregate(months_postdoc ~ specifics, tmSpec, median)
       colnames(time.spc)[colnames(time.spc)=="months_postdoc"] <- "Median_time"
+      time.spc$spc_num = as.numeric(time.spc$specifics)
       p <- ggplot(tmSpec, aes(x = specifics, y = months_postdoc, fill = specifics)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.spc, aes(label=round(Median_time,1), y = Median_time), color="white")
+      p <- p + coord_flip() + geom_text(data=time.spc, aes(label=round(Median_time,1), x=spc_num+0.4, y = Median_time))
       p <- p + scale_fill_manual(values=colorJSpec)
     }
     else if (input$selectTmTp == 'Trend') {
       tmSpec <- dataGroup
       time.spc = aggregate(months_postdoc ~ years + specifics, tmSpec, median)
       colnames(time.spc)[colnames(time.spc)=="months_postdoc"] <- "Median_time"
+      time.spc$spc_num = as.numeric(time.spc$specifics)
       p <- ggplot(tmSpec, aes(x = years, y = months_postdoc, fill = years)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.spc, aes(label=round(Median_time,1), y = Median_time), color="white")
+      p <- p + coord_flip() + geom_text(data=time.spc, aes(label=round(Median_time,1), x=spc_num+0.4, y = Median_time))
       p <- p + facet_grid(specifics ~ .)
       p <- p + theme(strip.text.y = element_text(size=10, face="bold"))
     }
@@ -2025,17 +2033,14 @@ function(input, output, session) {
       tmSpec <- dataGroup[dataGroup$years == timeConvert(input$selectTmTp), ]
       time.spc = aggregate(months_postdoc ~ specifics, tmSpec, median)
       colnames(time.spc)[colnames(time.spc)=="months_postdoc"] <- "Median_time"
+      time.spc$spc_num = as.numeric(time.spc$specifics)
       p <- ggplot(tmSpec, aes(x = specifics, y = months_postdoc, fill = specifics)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.spc, aes(label=round(Median_time,1), y = Median_time), color="white")
+      p <- p + coord_flip() + geom_text(data=time.spc, aes(label=round(Median_time,1), x=spc_num+0.4, y = Median_time))
       p <- p + scale_fill_manual(values=colorJSpec)
     }
     p <- p + ggtitle("Training Time (months)") + theme(legend.position="none") +
-      # labs(y='Months', x='Job Specifics')
       labs(y='Months', x='')
-    # ggp_build <- plotly_build(p)
-    # ggp_build$layout$height = input$sldHeightTm
-    # ggp_build$layout$width = input$sldWidthTm - 10
-    gp <- ggplotly(p, width = input$sldWidthTm, height = input$sldHeightTm, tooltip=c("x", "Median_time"))
+    gp <- ggplotly(p, width = input$sldWidthTm, height = input$sldHeightTm, tooltip=c("Median_time"))
     gp # %>% layout(margin = list(l = 75))
   })
   
@@ -2059,19 +2064,21 @@ function(input, output, session) {
   output$tmSpecTable <- renderTable({
     # choose data based on input$selectTmTp from ui.R
     if (input$selectTmTp == 'Left NIEHS in 2000-2014') {
-      tmSpec <- dfTimeSpecAll
+      tmSpec <- changeTableHeader(dfTimeSpecAll,c('Job_Specifics','Avg_Time','Min_Time','Max_Time','Alumni_Count'))
     }
     else if (input$selectTmTp == 'Trend') {
-      tmSpec <- dfTimeSpecYrs
+      tmSpec <- changeTableHeader(dfTimeSpecYrs,c('Years','Job_Specifics','Avg_Time','Min_Time','Max_Time','Alumni_Count'))
     }
     else {
-      tmSpec <- dfTimeSpecYrs[dfTimeSpecYrs$years == timeConvert(input$selectTmTp), ]
+      tmSpec <- changeTableHeader(dfTimeSpecYrs[dfTimeSpecYrs$years == timeConvert(input$selectTmTp), ],c('Years','Job_Specifics','Avg_Time','Min_Time','Max_Time','Alumni_Count'))
     }
     
     tmSpec
   })  
   
   # https://stackoverflow.com/questions/19440069/ggplot2-facet-wrap-strip-color-based-on-variable-in-data-set
+  # https://stats.stackexchange.com/questions/8206/labeling-boxplots-in-r
+  # https://stackoverflow.com/questions/32342616/ggplot-increase-distance-between-boxplots
   # training time gender plot
   output$tmGndrPlot <- renderPlotly({
     # choose data based on input$selectTmTp from ui.R
@@ -2079,16 +2086,18 @@ function(input, output, session) {
       tmGndr <- dataGroup
       time.gnd = aggregate(months_postdoc ~ gender, tmGndr, median)
       colnames(time.gnd)[colnames(time.gnd)=="months_postdoc"] <- "Median_time"
+      time.gnd$g_num = as.numeric(time.gnd$gender)
       p <- ggplot(tmGndr, aes(x = gender, y = months_postdoc, fill = gender)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.gnd, aes(label=round(Median_time,1), y = Median_time), color="white")
+      p <- p + coord_flip() + geom_text(data=time.gnd, aes(label=round(Median_time,1), x=g_num+0.3, y = Median_time))
       p <- p + scale_fill_manual(values=genderColors)
     }
     else if (input$selectTmTp == 'Trend') {
       tmGndr <- dataGroup
       time.gnd = aggregate(months_postdoc ~ years + gender, tmGndr, median)
       colnames(time.gnd)[colnames(time.gnd)=="months_postdoc"] <- "Median_time"
+      time.gnd$g_num = as.numeric(time.gnd$gender)
       p <- ggplot(tmGndr, aes(x = years, y = months_postdoc, fill = years)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.gnd, aes(label=round(Median_time,1), y = Median_time), color="white")
+      p <- p + coord_flip() + geom_text(data=time.gnd, aes(label=round(Median_time,1), x=g_num+0.3, y = Median_time))
       p <- p + facet_grid(gender ~ .)
       p <- p + theme(strip.text.y = element_text(size=10, face="bold"))
     }
@@ -2096,17 +2105,14 @@ function(input, output, session) {
       tmGndr <- dataGroup[dataGroup$years == timeConvert(input$selectTmTp), ]
       time.gnd = aggregate(months_postdoc ~ gender, tmGndr, median)
       colnames(time.gnd)[colnames(time.gnd)=="months_postdoc"] <- "Median_time"
+      time.gnd$g_num = as.numeric(time.gnd$gender)
       p <- ggplot(tmGndr, aes(x = gender, y = months_postdoc, fill = gender)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.gnd, aes(label=round(Median_time,1), y = Median_time), color="white")
+      p <- p + coord_flip() + geom_text(data=time.gnd, aes(label=round(Median_time,1), x=g_num+0.3, y = Median_time))
       p <- p + scale_fill_manual(values=genderColors)
     }
     p <- p + ggtitle("Training Time (months)") + theme(legend.position="none") +
-      # labs(y='Months', x='Gender')
       labs(y='Months', x='')
-    # ggp_build <- plotly_build(p)
-    # ggp_build$layout$height = input$sldHeightTm
-    # ggp_build$layout$width = input$sldWidthTm - 10
-    gp <- ggplotly(p, width = input$sldWidthTm, height = input$sldHeightTm, tooltip=c("x", "Median_time"))
+    gp <- ggplotly(p, width = input$sldWidthTm, height = input$sldHeightTm, tooltip=c("Median_time"))
     gp %>% layout(margin = list(l = 75))
   })
   
@@ -2137,13 +2143,13 @@ function(input, output, session) {
   output$tmGndrTable <- renderTable({
     # choose data based on input$selectTmTp from ui.R
     if (input$selectTmTp == 'Left NIEHS in 2000-2014') {
-      tmGndr <- gendTimeAll
+      tmGndr <- changeTableHeader(gendTimeAll,c('Gender','Avg_Time','Min_Time','Max_Time','Alumni_Count'))
     }
     else if (input$selectTmTp == 'Trend') {
-      tmGndr <- gendTimeGrp
+      tmGndr <- changeTableHeader(gendTimeGrp,c('Years','Gender','Avg_Time','Min_Time','Max_Time','Alumni_Count'))
     }
     else {
-      tmGndr <- gendTimeGrp[gendTimeGrp$years == timeConvert(input$selectTmTp), ]
+      tmGndr <- changeTableHeader(gendTimeGrp[gendTimeGrp$years == timeConvert(input$selectTmTp), ],c('Years','Gender','Avg_Time','Min_Time','Max_Time','Alumni_Count'))
     }
     tmGndr
   })
@@ -2386,7 +2392,7 @@ function(input, output, session) {
                                            "Primarily teaching"="#04E0E8",
                                            "Primarily applied research"="#295A4C",
                                            "Primarily basic research" = "#6C3A77",
-                                           "Additional postdoctoral training" = "#892F73" , 
+                                           "Additional postdoc" = "#892F73" , 
                                            "Unknown or Undecided"="#E461C4"), guide = FALSE)
       # p1 <- p1 + labs(x="Country of Origin", y= "Job Specifics")
       p1 <- p1 + labs(x="Country of Origin", y= "")
@@ -2424,17 +2430,17 @@ function(input, output, session) {
     if (input$selectCtPc == 1) {
       ccSctAll <- topData %>% group_by(country_origin, job_sector) %>% summarise (cnt = n()) %>% mutate(percent=cnt/sum(cnt)) %>% group_by(country_origin) %>% mutate(catcnt=sum(cnt))
       setDT(ccSctAll)
-      ccSctAll
+      changeTableHeader(ccSctAll,c('Country_Origin','Job_Sector','Alumni_Count','Alumni_Portion','Total_FromCountryOrigin'))
     }
     else if (input$selectCtPc == 2) {
       ccJtpAll <- topData %>% group_by(country_origin, job_type) %>% summarise (cnt = n()) %>% mutate(percent=cnt/sum(cnt)) %>% group_by(country_origin) %>% mutate(catcnt=sum(cnt))
       setDT(ccJtpAll)
-      ccJtpAll
+      changeTableHeader(ccJtpAll,c('Country_Origin','Job_Type','Alumni_Count','Alumni_Portion','Total_FromCountryOrigin'))
     }
     else {
       ccSpcAll <- topData %>% group_by(country_origin, specifics) %>% summarise (cnt = n()) %>% mutate(percent=cnt/sum(cnt)) %>% group_by(country_origin) %>% mutate(catcnt=sum(cnt))
       setDT(ccSpcAll)
-      ccSpcAll
+      changeTableHeader(ccSpcAll,c('Country_Origin','Job_Specifics','Alumni_Count','Alumni_Portion','Total_FromCountryOrigin'))
     }
   })  
   
@@ -2580,6 +2586,7 @@ function(input, output, session) {
       mt2 <- aggregate(months_postdoc~country_origin+job_sector,data=topData,FUN=mean)
       # merge data set 
       ccMntAll <- merge(ccSctAll,mt2,by=c("country_origin","job_sector"))
+      ccMntAll <- changeTableHeader(ccMntAll,c('Country_Origin','Job_Sector','Alumni_Count','Alumni_Portion','Total_FromCountryOrigin','Avg_Time(Months)'))
     }
     else if (input$selectCtPc == 2) {
       ccJtpAll <- topData %>% group_by(country_origin, job_type) %>% summarise (cnt = n()) %>% mutate(percent=cnt/sum(cnt)) %>% group_by(country_origin) %>% mutate(catcnt=sum(cnt))
@@ -2588,6 +2595,7 @@ function(input, output, session) {
       mt2 <- aggregate(months_postdoc~country_origin+job_type,data=topData,FUN=mean)
       # merge data set 
       ccMntAll <- merge(ccJtpAll,mt2,by=c("country_origin","job_type"))
+      ccMntAll <- changeTableHeader(ccMntAll,c('Country_Origin','Job_Type','Alumni_Count','Alumni_Portion','Total_FromCountryOrigin','Avg_Time(Months)'))
     }
     else {
       ccSpcAll <- topData %>% group_by(country_origin, specifics) %>% summarise (cnt = n()) %>% mutate(percent=cnt/sum(cnt)) %>% group_by(country_origin) %>% mutate(catcnt=sum(cnt))
@@ -2596,6 +2604,7 @@ function(input, output, session) {
       mt2 <- aggregate(months_postdoc~country_origin+specifics,data=topData,FUN=mean)
       # merge data set 
       ccMntAll <- merge(ccSpcAll,mt2,by=c("country_origin","specifics"))
+      ccMntAll <- changeTableHeader(ccMntAll,c('Country_Origin','Job_Specifics','Alumni_Count','Alumni_Portion','Total_FromCountryOrigin','Avg_Time(Months)'))
     }
     ccMntAll
   })  
@@ -2762,6 +2771,8 @@ function(input, output, session) {
       # Label
       pgenLabel=paste0(round(ccGenAll$mpct,2)*100,"%")
       ccGenAll$Male_Percent <- pgenLabel
+      ccGenAll$mpct <- NULL
+      ccGenAll <- changeTableHeader(ccGenAll,c('Country_Origin','Job_Sector','Gender','Gender_Count','Alumni_Count','Alumni_Portion','Total_FromCountryOrigin','Percent_Male'))
     }
     else if (input$selectCtPc == 2) {
       ccJtpAll <- topData %>% group_by(country_origin, job_type) %>% summarise (cnt = n()) %>% mutate(percent=cnt/sum(cnt)) %>% group_by(country_origin) %>% mutate(catcnt=sum(cnt))
@@ -2778,6 +2789,8 @@ function(input, output, session) {
       # Label
       pgenLabel=paste0(round(ccGenAll$mpct,2)*100,"%")
       ccGenAll$Male_Percent <- pgenLabel
+      ccGenAll$mpct <- NULL
+      ccGenAll <- changeTableHeader(ccGenAll,c('Country_Origin','Job_Type','Gender','Gender_Count','Alumni_Count','Alumni_Portion','Total_FromCountryOrigin','Percent_Male'))
     }
     else {
       ccSpcAll <- topData %>% group_by(country_origin, specifics) %>% summarise (cnt = n()) %>% mutate(percent=cnt/sum(cnt)) %>% group_by(country_origin) %>% mutate(catcnt=sum(cnt))
@@ -2794,6 +2807,8 @@ function(input, output, session) {
       # Label
       pgenLabel=paste0(round(ccGenAll$mpct,2)*100,"%")
       ccGenAll$Male_Percent <- pgenLabel
+      ccGenAll$mpct <- NULL
+      ccGenAll <- changeTableHeader(ccGenAll,c('Country_Origin','Job_Specifics','Gender','Gender_Count','Alumni_Count','Alumni_Portion','Total_FromCountryOrigin','Percent_Male'))
     }
     ccGenAll
   })  
@@ -2976,6 +2991,8 @@ function(input, output, session) {
       # Label
       plocLabel=paste0(round(ccLocAll$upct,2)*100,"%")
       ccLocAll$Percent_in_US <- plocLabel
+      ccLocAll$upct <- NULL
+      ccLocAll <- changeTableHeader(ccLocAll,c('Country_Origin','Job_Sector','Job_Location','Location_Count','Alumni_Count','Alumni_Portion','Total_FromCountryOrigin','Percent_InUS'))
     }
     else if (input$selectCtPc == 2) {
       ccJtpAll <- topData %>% group_by(country_origin, job_type) %>% summarise (cnt = n()) %>% mutate(percent=cnt/sum(cnt)) %>% group_by(country_origin) %>% mutate(catcnt=sum(cnt))
@@ -2996,6 +3013,8 @@ function(input, output, session) {
       # Label
       plocLabel=paste0(round(ccLocAll$upct,2)*100,"%")
       ccLocAll$Percent_in_US <- plocLabel
+      ccLocAll$upct <- NULL
+      ccLocAll <- changeTableHeader(ccLocAll,c('Country_Origin','Job_Type','Job_Location','Location_Count','Alumni_Count','Alumni_Portion','Total_FromCountryOrigin','Percent_InUS'))
     }
     else {
       ccSpcAll <- topData %>% group_by(country_origin, specifics) %>% summarise (cnt = n()) %>% mutate(percent=cnt/sum(cnt)) %>% group_by(country_origin) %>% mutate(catcnt=sum(cnt))
@@ -3016,6 +3035,8 @@ function(input, output, session) {
       # Label
       plocLabel=paste0(round(ccLocAll$upct,2)*100,"%")
       ccLocAll$Percent_in_US <- plocLabel
+      ccLocAll$upct <- NULL
+      ccLocAll <- changeTableHeader(ccLocAll,c('Country_Origin','Job_Specifics','Job_Location','Location_Count','Alumni_Count','Alumni_Portion','Total_FromCountryOrigin','Percent_InUS'))
     }
     ccLocAll
   })  
@@ -3329,7 +3350,7 @@ function(input, output, session) {
     
     dgcTypeAll <- degrData %>% group_by(degree_category, job_sector) %>% summarise (cnt = n()) %>% mutate(freq=cnt/sum(cnt))
     degrType <- dgcTypeAll %>% group_by(degree_category) %>% mutate(catcnt=sum(cnt))
-    degrType
+    changeTableHeader(degrType,c('Degree_Field','Job_Sector','Alumni_Count','Alumni_Portion','TotalAlmumni_InDegree'))
   })  
   
   # job type plot for study degree fields
@@ -3403,7 +3424,7 @@ function(input, output, session) {
     
     dgcTypeAll <- degrData %>% group_by(degree_category, job_type) %>% summarise (cnt = n()) %>% mutate(freq=cnt/sum(cnt))
     degrType <- dgcTypeAll %>% group_by(degree_category) %>% mutate(catcnt=sum(cnt))
-    degrType
+    changeTableHeader(degrType,c('Degree_Field','Job_Type','Alumni_Count','Alumni_Portion','TotalAlmumni_InDegree'))
   })
   
   # job specifics plot for study degree fields
@@ -3478,7 +3499,7 @@ function(input, output, session) {
     
     dgcTypeAll <- degrData %>% group_by(degree_category, specifics) %>% summarise (cnt = n()) %>% mutate(freq=cnt/sum(cnt))
     degrType <- dgcTypeAll %>% group_by(degree_category) %>% mutate(catcnt=sum(cnt))
-    degrType
+    changeTableHeader(degrType,c('Degree_Field','Job_Specifics','Alumni_Count','Alumni_Portion','TotalAlmumni_InDegree'))
   })  
   
   # degree study field dynamic UI

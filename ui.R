@@ -344,7 +344,7 @@ body <- dashboardBody(
             sliderInput("sldWidthTm", "Plot Width (px)", min = 0, max = 1200, value = 500)
           ),
           column(4, align="center",
-            sliderInput("sldHeightTm", "Plot Height (px)", min = 0, max = 1200, value = 400)
+            sliderInput("sldHeightTm", "Plot Height (px)", min = 0, max = 1200, value = 500)
           )
         ),
         uiOutput("tmDynamicUI")
