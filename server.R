@@ -1366,7 +1366,8 @@ function(input, output, session) {
     HTML(paste0("<p><strong>Career Outcomes in Different Job Specifics</strong> In ", slctYear, ", ", pctRSC,
          "% of all alumni enter into research-based positions, whether basic, applied, clinical, computation/informatics, or whether continuing research in another postdoc position. 
          The remainder are mostly involved in science-related non-research positions.
-         Each job specifics category in Career classification - Job specifics table that was populated by less than 2.5% of alumni (denoted by * within the table) was grouped into a category termed ‘REST COMBINED’ for ease of illustration.</p><p>&nbsp;</p>"))
+         Each job specifics category in <a id='distJobSpecTable'>Career classification - Job specifics table</a> that was populated with a small number of alumni was grouped into a category termed ‘REST COMBINED’ for ease of illustration. 
+         These categories (denoted by * within the table) include: Additional Degree, Business Development/Operations, Clinical Practice, Consulting, Grants Management, IP/Patenting, Sales, Science Policy.</p><p>&nbsp;</p>"))
   })
   
   # bar plot job specifics data
@@ -1415,9 +1416,16 @@ function(input, output, session) {
     HTML(paste0("<p><strong>Career Outcomes in Different Job Specifics (Bar Chart)</strong> In ", slctYear, ", ", pctRSC,
                 "% of all alumni enter into research-based positions, whether basic, applied, clinical, computation/informatics, or whether continuing research in another postdoc position. 
                 The remainder are mostly involved in science-related non-research positions.
-                Each job specifics category in Career classification - Job specifics table that was populated by less than 2.5% of alumni (denoted by * within the table) was grouped into a category termed ‘REST COMBINED’ for ease of illustration.</p><p>&nbsp;</p>"))
+                Each job specifics category in <a id='distJobSpecTable'>Career classification - Job specifics table</a> that was populated with a small number of alumni was grouped into a category termed ‘REST COMBINED’ for ease of illustration. 
+                These categories (denoted by * within the table) include: Additional Degree, Business Development/Operations, Clinical Practice, Consulting, Grants Management, IP/Patenting, Sales, Science Policy.</p><p>&nbsp;</p>"))
   })
-  
+  # https://stackoverflow.com/questions/34315485/linking-to-a-tab-or-panel-of-a-shiny-app
+  # https://stackoverflow.com/questions/37169039/direct-link-to-tabitem-with-r-shiny-dashboard
+  # https://stackoverflow.com/questions/33021757/externally-link-to-specific-tabpanel-in-shiny-app
+  # https://stackoverflow.com/questions/28605185/create-link-to-the-other-part-of-the-shiny-app/28605517#28605517
+  # https://stackoverflow.com/questions/27303526/r-shiny-build-links-between-tabs
+  # https://github.com/rstudio/shiny/issues/772#issuecomment-112919149
+  # https://groups.google.com/forum/#!msg/shiny-discuss/sJlasQf71fY/RW7Xc8F02IoJ
   
   # output job specifics table
   output$jobSpecTable <- renderTable({
@@ -2405,15 +2413,27 @@ function(input, output, session) {
   output$cntrJobTxt  <- renderText({
     if (input$selectCtPc == 1) {
       HTML("<p><strong>Variations Among the 'Top 5' Countries in Job Sector</strong>
-           A higher percentage of alumni from South Korea and Japan enter into academic institutes versus the remainder of the 'top five' countries based on number of alumni.</p><p>&nbsp;</p>")
+           A higher percentage of alumni from South Korea and Japan enter into academic institutes versus the remainder of the 'top five' countries based on number of alumni.
+           The legend depicting the size of the circles applies to all panels because the job category data is repeated and overlaid with another dimension in the subsequent panels. 
+           Percentages are based on the alumni outcomes within each individual country. 
+           For example, all circles on the solid gray line connecting the job sectors within the US sums to 100% of US alumni. 
+           All circles on the solid gray line connecting job sectors within China sums to 100% of Chinese alumni, etc.</p><p>&nbsp;</p>")
     }
     else if (input$selectCtPc == 2) {
       HTML("<p><strong>Variations Among the 'Top 5' Countries in Job Type</strong>
-           A higher percentage of alumni from South Korea and Japan enter into tenure-track positions versus the remainder of the 'top five' countries based on number of alumni.</p><p>&nbsp;</p>")
+           A higher percentage of alumni from South Korea and Japan enter into tenure-track positions versus the remainder of the 'top five' countries based on number of alumni.
+           The legend depicting the size of the circles applies to all panels because the job category data is repeated and overlaid with another dimension in the subsequent panels. 
+           Percentages are based on the alumni outcomes within each individual country. 
+           For example, all circles on the solid gray line connecting the job types within the US sums to 100% of US alumni. 
+           All circles on the solid gray line connecting job types within China sums to 100% of Chinese alumni, etc.</p><p>&nbsp;</p>")
     }
     else {
       HTML("<p><strong>Variations Among the 'Top 5' Countries in Job Specifics</strong>
-           A higher percentage of alumni from South Korea and Japan do basic research versus the remainder of the 'top five' countries based on number of alumni.</p><p>&nbsp;</p>")
+           A higher percentage of alumni from South Korea and Japan do basic research versus the remainder of the 'top five' countries based on number of alumni.
+           The legend depicting the size of the circles applies to all panels because the job category data is repeated and overlaid with another dimension in the subsequent panels. 
+           Percentages are based on the alumni outcomes within each individual country. 
+           For example, all circles on the solid gray line connecting the job specifics within the US sums to 100% of US alumni. 
+           All circles on the solid gray line connecting job specifics within China sums to 100% of Chinese alumni, etc.</p><p>&nbsp;</p>")
     }
   })
   
@@ -2483,6 +2503,8 @@ function(input, output, session) {
       ccMntAll$country_origin <- as.character(ccMntAll$country_origin)
       ccMntAll$country_origin <- paste(ccMntAll$country_origin, paste0("N=",ccMntAll$catcnt), sep="\n")
       ccMntAll$country_origin <- factor(ccMntAll$country_origin)
+      # (3/27/18)
+      labMnt <- subset(ccMntAll, job_sector == topSect)
       
       p2 <- ggplot(ccMntAll,aes(x=country_origin,y=job_sector)) +
         geom_point(aes(size=percent,fill=months_postdoc),alpha=0.9,color="gray48",shape=21) +
@@ -2491,7 +2513,7 @@ function(input, output, session) {
               panel.grid.major.x = element_line(colour = "gray", linetype="solid"),
               panel.grid.major.y = element_line(colour = "gray", linetype="dashed"),
               axis.text = element_text(size=11))
-      p2 <- p2 + geom_text(aes(x=country_origin,y=job_sector,label=lab))
+      p2 <- p2 + geom_label(data=labMnt, aes(x=country_origin,y=job_sector,label=lab))
       p2 <- p2 + scale_fill_gradient2(name="Mean Training\nTime (months)", low="green",mid="purple", high="orange", midpoint=40)
       # p2 <- p2 + labs(x="Country of Origin", y= "Job Sector")
       p2 <- p2 + labs(x="Country of Origin", y= "")
@@ -2516,6 +2538,8 @@ function(input, output, session) {
       ccMntAll$country_origin <- as.character(ccMntAll$country_origin)
       ccMntAll$country_origin <- paste(ccMntAll$country_origin, paste0("N=",ccMntAll$catcnt), sep="\n")
       ccMntAll$country_origin <- factor(ccMntAll$country_origin)
+      # (3/27/18)
+      labMnt <- subset(ccMntAll, job_type == topType)
       
       p2 <- ggplot(ccMntAll,aes(x=country_origin,y=job_type)) +
         geom_point(aes(size=percent,fill=months_postdoc),alpha=0.9,color="gray48",shape=21) +
@@ -2524,7 +2548,7 @@ function(input, output, session) {
               panel.grid.major.x = element_line(colour = "gray", linetype="solid"),
               panel.grid.major.y = element_line(colour = "gray", linetype="dashed"),
               axis.text = element_text(size=11))
-      p2 <- p2 + geom_text(aes(x=country_origin,y=job_type,label=lab))
+      p2 <- p2 + geom_label(data=labMnt, aes(x=country_origin,y=job_type,label=lab))
       p2 <- p2 + scale_fill_gradient2(name="Mean Training\nTime (months)", low="green",mid="purple", high="orange", midpoint=40)
       # p2 <- p2 + labs(x="Country of Origin", y= "Job Type")
       p2 <- p2 + labs(x="Country of Origin", y= "")
@@ -2549,6 +2573,8 @@ function(input, output, session) {
       ccMntAll$country_origin <- as.character(ccMntAll$country_origin)
       ccMntAll$country_origin <- paste(ccMntAll$country_origin, paste0("N=",ccMntAll$catcnt), sep="\n")
       ccMntAll$country_origin <- factor(ccMntAll$country_origin)
+      # (3/27/18)
+      labMnt <- subset(ccMntAll, specifics == topSpec)
       
       p2 <- ggplot(ccMntAll,aes(x=country_origin,y=specifics)) +
         geom_point(aes(size=percent,fill=months_postdoc),alpha=0.9,color="gray48",shape=21) +
@@ -2557,7 +2583,7 @@ function(input, output, session) {
               panel.grid.major.x = element_line(colour = "gray", linetype="solid"),
               panel.grid.major.y = element_line(colour = "gray", linetype="dashed"),
               axis.text = element_text(size=11))
-      p2 <- p2 + geom_text(aes(x=country_origin,y=specifics,label=lab))
+      p2 <- p2 + geom_label(data=labMnt, aes(x=country_origin,y=specifics,label=lab))
       p2 <- p2 + scale_fill_gradient2(name="Mean Training\nTime (months)", low="green",mid="purple", high="orange", midpoint=40)
       # p2 <- p2 + labs(x="Country of Origin", y= "Job Specifics")
       p2 <- p2 + labs(x="Country of Origin", y= "")
@@ -2566,8 +2592,35 @@ function(input, output, session) {
     p2
   },height=ctHeight,width=ctWidth)
   
-  output$cntrTimeTxt  <- renderText({HTML("<p><strong>Variations Among the 'Top 5' Countries in Training Time</strong>
-           Alumni from China, South Korea and Japan have shorter training time versus alumni from India and US.</p><p>&nbsp;</p>")})
+  output$cntrTimeTxt  <- renderText({
+    if (input$selectCtPc == 1) {
+      HTML("<p><strong>Variations Among the 'Top 5' Countries in Training Time</strong>
+           Alumni from China, South Korea and Japan have shorter training time versus alumni from India and US.
+           The legend depicting the size of the circles (from the job category panel) applies to all panels because <u>the job category data is repeated and overlaid with the average training time</u>. 
+           Percentages represented by circle size are based on the alumni outcomes within each individual country. 
+           For example, all circles on the solid gray line connecting the job sectors within the US sums to 100% of US alumni. 
+           All circles on the solid gray line connecting job sectors within China sums to 100% of Chinese alumni, etc. 
+           The mean training time (in months) is displayed in text for all alumni within the total selected job sector.</p><p>&nbsp;</p>")
+    }
+    else if (input$selectCtPc == 2) {
+      HTML("<p><strong>Variations Among the 'Top 5' Countries in Training Time</strong>
+           Alumni from China, South Korea and Japan have shorter training time versus alumni from India and US.
+           The legend depicting the size of the circles (from the job category panel) applies to all panels because <u>the job category data is repeated and overlaid with the average training time</u>. 
+           Percentages represented by circle size are based on the alumni outcomes within each individual country. 
+           For example, all circles on the solid gray line connecting the job types within the US sums to 100% of US alumni. 
+           All circles on the solid gray line connecting job types within China sums to 100% of Chinese alumni, etc. 
+           The mean training time (in months) is displayed in text for all alumni within the total selected job type.</p><p>&nbsp;</p>")
+    }
+    else {
+      HTML("<p><strong>Variations Among the 'Top 5' Countries in Training Time</strong>
+           Alumni from China, South Korea and Japan have shorter training time versus alumni from India and US.
+           The legend depicting the size of the circles (from the job category panel) applies to all panels because <u>the job category data is repeated and overlaid with the average training time</u>. 
+           Percentages represented by circle size are based on the alumni outcomes within each individual country. 
+           For example, all circles on the solid gray line connecting the job specifics within the US sums to 100% of US alumni. 
+           All circles on the solid gray line connecting job specifics within China sums to 100% of Chinese alumni, etc. 
+           The mean training time (in months) is displayed in text for all alumni within the total selected job specifics.</p><p>&nbsp;</p>")
+    }
+  })
   
   # training time data table for top countries
   output$cntrTimeTable <- renderTable({
@@ -2652,6 +2705,8 @@ function(input, output, session) {
       ccGenAll$country_origin <- as.character(ccGenAll$country_origin)
       ccGenAll$country_origin <- paste(ccGenAll$country_origin, paste0("N=",ccGenAll$catcnt), sep="\n")
       ccGenAll$country_origin <- factor(ccGenAll$country_origin)
+      # (3/27/18)
+      labGen <- subset(ccGenAll, job_sector == topSect)
       
       p3 <- ggplot(ccGenAll,aes(x=country_origin,y=job_sector)) +
         geom_point(aes(size=percent,fill=mpct),alpha=0.9,color="gray48",shape=21) +
@@ -2660,7 +2715,7 @@ function(input, output, session) {
               panel.grid.major.x = element_line(colour = "gray", linetype="solid"),
               panel.grid.major.y = element_line(colour = "gray", linetype="dashed"),
               axis.text = element_text(size=11))
-      p3 <- p3 + geom_text(aes(x=country_origin,y=job_sector,label=lab))
+      p3 <- p3 + geom_label(data=labGen, aes(x=country_origin,y=job_sector,label=lab))
       p3 <- p3 + scale_fill_gradient2(name="Gender\n(% Male)",low="deeppink2",mid="white", high="dodgerblue1", midpoint=0.5, labels=scales::percent)
       # p3 <- p3 + labs(x="Country of Origin", y= "Job Sector")
       p3 <- p3 + labs(x="Country of Origin", y= "")
@@ -2689,6 +2744,8 @@ function(input, output, session) {
       ccGenAll$country_origin <- as.character(ccGenAll$country_origin)
       ccGenAll$country_origin <- paste(ccGenAll$country_origin, paste0("N=",ccGenAll$catcnt), sep="\n")
       ccGenAll$country_origin <- factor(ccGenAll$country_origin)
+      # (3/27/18)
+      labGen <- subset(ccGenAll, job_type == topType)
       
       p3 <- ggplot(ccGenAll,aes(x=country_origin,y=job_type)) +
         geom_point(aes(size=percent,fill=mpct),alpha=0.9,color="gray48",shape=21) +
@@ -2697,7 +2754,7 @@ function(input, output, session) {
               panel.grid.major.x = element_line(colour = "gray", linetype="solid"),
               panel.grid.major.y = element_line(colour = "gray", linetype="dashed"),
               axis.text = element_text(size=11))
-      p3 <- p3 + geom_text(aes(x=country_origin,y=job_type,label=lab))
+      p3 <- p3 + geom_label(data=labGen, aes(x=country_origin,y=job_type,label=lab))
       p3 <- p3 + scale_fill_gradient2(name="Male \n(% within Country)",low="deeppink2",mid="white", high="dodgerblue1", midpoint=0.5, labels=scales::percent)
       # p3 <- p3 + labs(x="Country of Origin", y= "Job Type")
       p3 <- p3 + labs(x="Country of Origin", y= "")
@@ -2726,6 +2783,8 @@ function(input, output, session) {
       ccGenAll$country_origin <- as.character(ccGenAll$country_origin)
       ccGenAll$country_origin <- paste(ccGenAll$country_origin, paste0("N=",ccGenAll$catcnt), sep="\n")
       ccGenAll$country_origin <- factor(ccGenAll$country_origin)
+      # (3/27/18)
+      labGen <- subset(ccGenAll, specifics == topSpec)
       
       p3 <- ggplot(ccGenAll,aes(x=country_origin,y=specifics)) +
         geom_point(aes(size=percent,fill=mpct),alpha=0.9,color="gray48",shape=21) +
@@ -2734,7 +2793,7 @@ function(input, output, session) {
               panel.grid.major.x = element_line(colour = "gray", linetype="solid"),
               panel.grid.major.y = element_line(colour = "gray", linetype="dashed"),
               axis.text = element_text(size=11))
-      p3 <- p3 + geom_text(aes(x=country_origin,y=specifics,label=lab))
+      p3 <- p3 + geom_label(data=labGen, aes(x=country_origin,y=specifics,label=lab))
       p3 <- p3 + scale_fill_gradient2(name="Gender\n(% Male)",low="deeppink2",mid="white", high="dodgerblue1", midpoint=0.5, labels=scales::percent)
       # p3 <- p3 + labs(x="Country of Origin", y= "Job Specifics")
       p3 <- p3 + labs(x="Country of Origin", y= "")
@@ -2743,8 +2802,35 @@ function(input, output, session) {
     p3
   },height=ctHeight,width=ctWidth)
   
-  output$cntrGenderTxt  <- renderText({HTML("<p><strong>Variations Among the 'Top 5' Countries in Gender Ratio</strong>
-           A higher percentage of alumni from South Korea and Japan are male versus the remainder of the 'top five' countries based on number of alumni.</p><p>&nbsp;</p>")})
+  output$cntrGenderTxt <- renderText({
+    if (input$selectCtPc == 1) {
+      HTML("<p><strong>Variations Among the 'Top 5' Countries in Gender Ratio</strong>
+           A higher percentage of alumni from South Korea and Japan are male versus the remainder of the 'top five' countries based on number of alumni.
+           The legend depicting the size of the circles (from the job category panel) applies to all panels because the <u>job category data is repeated and overlaid with gender composition (100% male to 0% male)</u>. 
+           Percentages represented by circle size are based on the alumni outcomes within each individual country. 
+           For example, all circles on the solid gray line connecting the job sectors within the US sums to 100% of US alumni. 
+           All circles on the solid gray line connecting job sectors within China sums to 100% of Chinese alumni, etc. 
+           Percentages shown as text indicate the relative percentage of males within the total selected job sector.</p><p>&nbsp;</p>")
+    }
+    else if (input$selectCtPc == 2) {
+      HTML("<p><strong>Variations Among the 'Top 5' Countries in Gender Ratio</strong>
+           A higher percentage of alumni from South Korea and Japan are male versus the remainder of the 'top five' countries based on number of alumni.
+           The legend depicting the size of the circles (from the job category panel) applies to all panels because the <u>job category data is repeated and overlaid with gender composition (100% male to 0% male)</u>. 
+           Percentages represented by circle size are based on the alumni outcomes within each individual country. 
+           For example, all circles on the solid gray line connecting the job types within the US sums to 100% of US alumni. 
+           All circles on the solid gray line connecting job types within China sums to 100% of Chinese alumni, etc. 
+           Percentages shown as text indicate the relative percentage of males within the total selected job type.</p><p>&nbsp;</p>")
+    }
+    else {
+      HTML("<p><strong>Variations Among the 'Top 5' Countries in Gender Ratio</strong>
+           A higher percentage of alumni from South Korea and Japan are male versus the remainder of the 'top five' countries based on number of alumni.
+           The legend depicting the size of the circles (from the job category panel) applies to all panels because the <u>job category data is repeated and overlaid with gender composition (100% male to 0% male)</u>. 
+           Percentages represented by circle size are based on the alumni outcomes within each individual country. 
+           For example, all circles on the solid gray line connecting the job specifics within the US sums to 100% of US alumni. 
+           All circles on the solid gray line connecting job specifics within China sums to 100% of Chinese alumni, etc. 
+           Percentages shown as text indicate the relative percentage of males within the total selected job specifics.</p><p>&nbsp;</p>")
+    }
+  })
   
   # gender data table for top countries
   output$cntrGenderTable <- renderTable({
@@ -2860,6 +2946,8 @@ function(input, output, session) {
       ccLocAll$country_origin <- as.character(ccLocAll$country_origin)
       ccLocAll$country_origin <- paste(ccLocAll$country_origin, paste0("N=",ccLocAll$catcnt), sep="\n")
       ccLocAll$country_origin <- factor(ccLocAll$country_origin)
+      # (3/27/18)
+      labLoc <- subset(ccLocAll, job_sector == topSect)
       
       p4 <- ggplot(ccLocAll,aes(x=country_origin,y=job_sector)) +
         geom_point(aes(size=percent,fill=upct),alpha=0.9,color="gray48",shape=21) +
@@ -2868,7 +2956,7 @@ function(input, output, session) {
               panel.grid.major.x = element_line(colour = "gray", linetype="solid"),
               panel.grid.major.y = element_line(colour = "gray", linetype="dashed"),
               axis.text = element_text(size=11))
-      p4 <- p4 + geom_text(aes(x=country_origin,y=job_sector,label=lab))
+      p4 <- p4 + geom_label(data=labLoc, aes(x=country_origin,y=job_sector,label=lab))
       p4 <- p4 + scale_fill_gradient2(name="Job Location\n(% working\nin US)",low="purple4",mid="white", high="green4", midpoint=0.5, labels=scales::percent)
       # p4 <- p4 + labs(x="Country of Origin", y= "Job Sector")
       p4 <- p4 + labs(x="Country of Origin", y= "")
@@ -2901,6 +2989,8 @@ function(input, output, session) {
       ccLocAll$country_origin <- as.character(ccLocAll$country_origin)
       ccLocAll$country_origin <- paste(ccLocAll$country_origin, paste0("N=",ccLocAll$catcnt), sep="\n")
       ccLocAll$country_origin <- factor(ccLocAll$country_origin)
+      # (3/27/18)
+      labLoc <- subset(ccLocAll, job_type == topType)
       
       p4 <- ggplot(ccLocAll,aes(x=country_origin,y=job_type)) +
         geom_point(aes(size=percent,fill=upct),alpha=0.9,color="gray48",shape=21) +
@@ -2909,7 +2999,7 @@ function(input, output, session) {
               panel.grid.major.x = element_line(colour = "gray", linetype="solid"),
               panel.grid.major.y = element_line(colour = "gray", linetype="dashed"),
               axis.text = element_text(size=11))
-      p4 <- p4 + geom_text(aes(x=country_origin,y=job_type,label=lab))
+      p4 <- p4 + geom_label(data=labLoc, aes(x=country_origin,y=job_type,label=lab))
       p4 <- p4 + scale_fill_gradient2(name="Job Location\n(% working\nin US)",low="purple4",mid="white", high="green4", midpoint=0.5, labels=scales::percent)
       # p4 <- p4 + labs(x="Country of Origin", y= "Job Type")
       p4 <- p4 + labs(x="Country of Origin", y= "")
@@ -2942,6 +3032,8 @@ function(input, output, session) {
       ccLocAll$country_origin <- as.character(ccLocAll$country_origin)
       ccLocAll$country_origin <- paste(ccLocAll$country_origin, paste0("N=",ccLocAll$catcnt), sep="\n")
       ccLocAll$country_origin <- factor(ccLocAll$country_origin)
+      # (3/27/18)
+      labLoc <- subset(ccLocAll, specifics == topSpec)
       
       p4 <- ggplot(ccLocAll,aes(x=country_origin,y=specifics)) +
         geom_point(aes(size=percent,fill=upct),alpha=0.9,color="gray48",shape=21) +
@@ -2950,7 +3042,7 @@ function(input, output, session) {
               panel.grid.major.x = element_line(colour = "gray", linetype="solid"),
               panel.grid.major.y = element_line(colour = "gray", linetype="dashed"),
               axis.text = element_text(size=11))
-      p4 <- p4 + geom_text(aes(x=country_origin,y=specifics,label=lab))
+      p4 <- p4 + geom_label(data=labLoc, aes(x=country_origin,y=specifics,label=lab))
       p4 <- p4 + scale_fill_gradient2(name="Job Location\n(% working\nin US)",low="purple4",mid="white", high="green4", midpoint=0.5, labels=scales::percent)
       # p4 <- p4 + labs(x="Country of Origin", y= "Job Specifics")
       p4 <- p4 + labs(x="Country of Origin", y= "")
@@ -2959,9 +3051,36 @@ function(input, output, session) {
     p4
   },height=ctHeight,width=ctWidth)
   
-  output$cntrLocationTxt  <- renderText({HTML("<p><strong>Variations Among the 'Top 5' Countries in Work Location</strong>
-           A lower percentage of alumni from South Korea and Japan remain in US after their training versus the remainder of the 'top five' countries based on number of alumni.</p><p>&nbsp;</p>")})
-  
+  output$cntrLocationTxt <- renderText({
+    if (input$selectCtPc == 1) {
+      HTML("<p><strong>Variations Among the 'Top 5' Countries in Work Location</strong>
+           A lower percentage of alumni from South Korea and Japan remain in US after their training versus the remainder of the 'top five' countries based on number of alumni.
+           The legend depicting the size of the circles (from the job category panel) applies to all panels because the <u>job category data is repeated and overlaid with work location (100% working in US to 0% working in the US)</u>. 
+           Percentages represented by circle size are based on the alumni outcomes within each individual country. 
+           For example, all circles on the solid gray line connecting the job sectors within the US sums to 100% of US alumni. 
+           All circles on the solid gray line connecting job sectors within China sums to 100% of Chinese alumni, etc. 
+           Percentages shown as text indicate the relative percentage of those working in the US within the total selected job sector.</p><p>&nbsp;</p>")
+    }
+    else if (input$selectCtPc == 2) {
+      HTML("<p><strong>Variations Among the 'Top 5' Countries in Work Location</strong>
+           A lower percentage of alumni from South Korea and Japan remain in US after their training versus the remainder of the 'top five' countries based on number of alumni.
+           The legend depicting the size of the circles (from the job category panel) applies to all panels because the <u>job category data is repeated and overlaid with work location (100% working in US to 0% working in the US)</u>. 
+           Percentages represented by circle size are based on the alumni outcomes within each individual country. 
+           For example, all circles on the solid gray line connecting the job types within the US sums to 100% of US alumni. 
+           All circles on the solid gray line connecting job types within China sums to 100% of Chinese alumni, etc. 
+           Percentages shown as text indicate the relative percentage of those working in the US within the total selected job type.</p><p>&nbsp;</p>")
+    }
+    else {
+      HTML("<p><strong>Variations Among the 'Top 5' Countries in Work Location</strong>
+           A lower percentage of alumni from South Korea and Japan remain in US after their training versus the remainder of the 'top five' countries based on number of alumni.
+           The legend depicting the size of the circles (from the job category panel) applies to all panels because the <u>job category data is repeated and overlaid with work location (100% working in US to 0% working in the US)</u>. 
+           Percentages represented by circle size are based on the alumni outcomes within each individual country. 
+           For example, all circles on the solid gray line connecting the job specifics within the US sums to 100% of US alumni. 
+           All circles on the solid gray line connecting job specifics within China sums to 100% of Chinese alumni, etc. 
+           Percentages shown as text indicate the relative percentage of those working in the US within the total selected job specifics.</p><p>&nbsp;</p>")
+    }
+  })
+
   # job location data table for top countries
   output$cntrLocationTable <- renderTable({
     # choose data based on input$selectCtTp from ui.R
@@ -3099,14 +3218,14 @@ function(input, output, session) {
             title = "Job category", width = 6,
             # The id lets us use input$ctJobSml on the server to find the current tab
             id = "tab_ctJobSml",
-            tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("cntrJobTxt"), plotOutput("cntrJobPlot")),
+            tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("cntrJobTxt"), plotOutput("cntrJobPlot")),
             tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("cntrJobTable"))
           ),
           tabBox(
             title = "Training time", width = 6,
             # The id lets us use input$ctTimeSml on the server to find the current tab
             id = "tab_ctTimeSml",
-            tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("cntrTimeTxt"), plotOutput("cntrTimePlot")),
+            tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("cntrTimeTxt"), plotOutput("cntrTimePlot")),
             tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("cntrTimeTable"))
           )
         ),
@@ -3115,14 +3234,14 @@ function(input, output, session) {
             title = "Gender", width = 6,
             # The id lets us use input$tab_ctGenderSml on the server to find the current tab
             id = "tab_ctGenderSml",
-            tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("cntrGenderTxt"), plotOutput("cntrGenderPlot")),
+            tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("cntrGenderTxt"), plotOutput("cntrGenderPlot")),
             tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("cntrGenderTable"))
           ),
           tabBox(
             title = "Location", width = 6,
             # The id lets us use input$ctLocationSml on the server to find the current tab
             id = "tab_ctLocationSml",
-            tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("cntrLocationTxt"), plotOutput("cntrLocationPlot")),
+            tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("cntrLocationTxt"), plotOutput("cntrLocationPlot")),
             tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("cntrLocationTable"))
           )
         )
@@ -3335,7 +3454,7 @@ function(input, output, session) {
   },height=dgHeight,width=dgWidth)
   output$degrJSectTxt  <- renderText({HTML("<p><strong>Percentage of Alumni that Enter into Academic Institution Positions Based on Their Doctoral Degree Field</strong> 
                                            Alumni doctoral degree fields were standardized according to the main program groups defined within NCES' Biological and Biomedical Sciences instructional programs. 
-                                           The relative percentage of alumni within each degree field entering into academic insitute positions is shown. 
+                                           The relative percentage of alumni within each degree field entering into academic institute positions is shown. 
                                            The 95% confidence intervals for the binomial proportion are shown here.
                                            *, the main NCES program group is ‘<i>Biomathematics, Bioinformatics, and Computational Biology</i>;’ ‘<i>Biostatistics</i>’ was substituted for <i>‘Biomathematics’ and ‘Bioinformatics’</i> within the title because nearly all alumni in this category possessed a degree in statistics or biostatistics.</p><p>&nbsp;</p>")})
   

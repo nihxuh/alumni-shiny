@@ -249,7 +249,7 @@ body <- dashboardBody(
     
     tabItem("general",
       fluidRow(
-        box(title = "GENERAL CAREER COUTCOMES", width = 12, solidHeader = TRUE,
+        box(title = "GENERAL CAREER OUTCOMES", width = 12, solidHeader = TRUE,
             paste0("From 2000 to 2014, a large pecentage ", max(tGnrSectorPct), "% of alumni are employed in '", names(which(tGnrSectorPct==max(tGnrSectorPct))), "' Job Sector. ",
                    "More alumni ", max(tGnrTypePct), "% work as '", names(which(tGnrTypePct==max(tGnrTypePct))), "' than any other Job Type. ",
                    "The top Job Specifics is '", names(which(tGnrSpecPct==max(tGnrSpecPct))), "', with ", max(tGnrSpecPct), "% of alumni.")
