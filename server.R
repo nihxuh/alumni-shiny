@@ -46,7 +46,7 @@ function(input, output, session) {
   output$years <- renderValueBox({
     valueBox(
       value = totalYrs,
-      subtitle = "Time span",
+      subtitle = "Postdocs became alumni in this time span",
       icon = icon("calendar")
     )
   })
@@ -64,7 +64,7 @@ function(input, output, session) {
   output$coverage <- renderValueBox({
     valueBox(
       value = covRate,
-      subtitle = "Alumni with known outcomes",
+      subtitle = "Alumni with known outcome snapshots",
       icon = icon("pie-chart"),
       color = "yellow"
     )
@@ -159,7 +159,8 @@ function(input, output, session) {
     p1 <- p1 + guides(fill=guide_legend(title=inType)) + geom_label(data=dcAll, aes(x=Item, y = 1, label=Count))
           # annotate("text", x=dcAll$Item, y = 1, label=dcAll$Count, colour = "#e6e600", fontface =2)
     ltCat <- likert(summary=ldCat)
-    p2 <- plot(ltCat, colors=inColors, ordered = FALSE, text.size=4) + ggtitle(titleCat) + theme(plot.title = element_text(hjust = 0.5), axis.text=element_text(size=12,face="bold"))
+    # p2 <- plot(ltCat, colors=inColors, ordered = FALSE, text.size=4) + ggtitle(titleCat) + theme(plot.title = element_text(hjust = 0.5), axis.text=element_text(size=12,face="bold"))
+    p2 <- plot(ltCat, colors=inColors, ordered = FALSE) + ggtitle(titleCat) + theme(plot.title = element_text(hjust = 0.5), axis.text=element_text(size=12,face="bold"))
     p2 <- p2 + guides(fill=guide_legend(title=inType)) + geom_label(data=dcCat, aes(x=Item, y = 1, label=Count))
           # annotate("text", x=dcCat$Item, y = 1, label=dcCat$Count, colour = "#e6e600", fontface =2)
     
@@ -573,8 +574,8 @@ function(input, output, session) {
           title = "Gender", width = 12,
           # The id lets us use input$tabset3 on the server to find the current tab
           id = "tab_gender",
-          tabPanel("Gender Likert plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("genderLtTxt"), plotOutput("genderLtPlot")),
-          tabPanel("Gender bar chart", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("genderPbTxt"), plotOutput("genderPbPlot")),
+          tabPanel("Gender Likert plot", style = "overflow-x:scroll; overflow-y:scroll; height: 800px", htmlOutput("genderLtTxt"), plotOutput("genderLtPlot")),
+          tabPanel("Gender bar chart", style = "overflow-x:scroll; overflow-y:scroll; height: 800px", htmlOutput("genderPbTxt"), plotOutput("genderPbPlot")),
           tabPanel("Gender data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("genderTable"))
         )
       )
@@ -586,8 +587,8 @@ function(input, output, session) {
           title = "Country origin", width = 12,
           # The id lets us use input$tabset4 on the server to find the current tab
           id = "tab_visit",
-          tabPanel("Origin Likert plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("visitLtTxt"), plotOutput("visitLtPlot")),
-          tabPanel("Origin bar chart", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("visitPbTxt"), plotOutput("visitPbPlot")),
+          tabPanel("Origin Likert plot", style = "overflow-x:scroll; overflow-y:scroll; height: 800px", htmlOutput("visitLtTxt"), plotOutput("visitLtPlot")),
+          tabPanel("Origin bar chart", style = "overflow-x:scroll; overflow-y:scroll; height: 800px", htmlOutput("visitPbTxt"), plotOutput("visitPbPlot")),
           tabPanel("Origin data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("visitTable"))
         )
       )
@@ -850,7 +851,7 @@ function(input, output, session) {
           title = "Alumni migration", width = 12,
           # The id lets us use input$tab_migr on the server to find the current tab
           id = "tab_migr",
-          tabPanel("Migration plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("migrateTxt"), plotOutput("migratePlot")),
+          tabPanel("Migration plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("migrateTxt"), plotOutput("migratePlot")),
           tabPanel("Migration data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("migrateTable"))
         )
       )
@@ -862,7 +863,7 @@ function(input, output, session) {
           title = "Alumni within U.S.", width = 12,
           # The id lets us use input$tab_state on the server to find the current tab
           id = "tab_state",
-          tabPanel("State plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("stateTxt"), plotOutput("statePlot")),
+          tabPanel("State plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("stateTxt"), plotOutput("statePlot")),
           tabPanel("State data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("stateTable"))
         )
       )
@@ -874,14 +875,14 @@ function(input, output, session) {
           title = "Alumni migration",
           # The id lets us use input$tab_migrSml on the server to find the current tab
           id = "tab_migrSml",
-          tabPanel("Migration plot", style = "overflow-x:scroll; overflow-y:scroll; height: 600px", htmlOutput("migrateTxt"), plotOutput("migratePlot")),
+          tabPanel("Migration plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("migrateTxt"), plotOutput("migratePlot")),
           tabPanel("Migration data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("migrateTable"))
         ),
         tabBox(
           title = "Alumni within U.S.",
           # The id lets us use input$tab_stateSml on the server to find the current tab
           id = "tab_stateSml",
-          tabPanel("State plot", style = "overflow-x:scroll; overflow-y:scroll; height: 600px", htmlOutput("stateTxt"), plotOutput("statePlot")),
+          tabPanel("State plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("stateTxt"), plotOutput("statePlot")),
           tabPanel("State data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("stateTable"))
         )
       )
@@ -1366,7 +1367,7 @@ function(input, output, session) {
     HTML(paste0("<p><strong>Career Outcomes in Different Job Specifics</strong> In ", slctYear, ", ", pctRSC,
          "% of all alumni enter into research-based positions, whether basic, applied, clinical, computation/informatics, or whether continuing research in another postdoc position. 
          The remainder are mostly involved in science-related non-research positions.
-         Each job specifics category in <a id='distJobSpecTable'>Career classification - Job specifics table</a> that was populated with a small number of alumni was grouped into a category termed ‘REST COMBINED’ for ease of illustration. 
+         Each job specifics category in Career classification - Job specifics table that was populated with a small number of alumni was grouped into a category termed ‘REST COMBINED’ for ease of illustration. 
          These categories (denoted by * within the table) include: Additional Degree, Business Development/Operations, Clinical Practice, Consulting, Grants Management, IP/Patenting, Sales, Science Policy.</p><p>&nbsp;</p>"))
   })
   
@@ -1416,7 +1417,7 @@ function(input, output, session) {
     HTML(paste0("<p><strong>Career Outcomes in Different Job Specifics (Bar Chart)</strong> In ", slctYear, ", ", pctRSC,
                 "% of all alumni enter into research-based positions, whether basic, applied, clinical, computation/informatics, or whether continuing research in another postdoc position. 
                 The remainder are mostly involved in science-related non-research positions.
-                Each job specifics category in <a id='distJobSpecTable'>Career classification - Job specifics table</a> that was populated with a small number of alumni was grouped into a category termed ‘REST COMBINED’ for ease of illustration. 
+                Each job specifics category in Career classification - Job specifics table that was populated with a small number of alumni was grouped into a category termed ‘REST COMBINED’ for ease of illustration. 
                 These categories (denoted by * within the table) include: Additional Degree, Business Development/Operations, Clinical Practice, Consulting, Grants Management, IP/Patenting, Sales, Science Policy.</p><p>&nbsp;</p>"))
   })
   # https://stackoverflow.com/questions/34315485/linking-to-a-tab-or-panel-of-a-shiny-app
@@ -1450,7 +1451,7 @@ function(input, output, session) {
           title = "Job Sector", width = 12,
           # The id lets us use input$tab_genJSector on the server to find the current tab
           id = "tab_genJSector",
-          tabPanel("Job sector chart", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("jobSectDonutTxt"), plotlyOutput("jobSectDonut")),
+          tabPanel("Job sector chart", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("jobSectDonutTxt"), plotlyOutput("jobSectDonut")),
           # tabPanel("Job sector bar chart", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("jobSectBarTxt"), plotlyOutput("jobSectBar")),
           tabPanel("Job sector data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("jobSectTable"))
         )
@@ -1463,7 +1464,7 @@ function(input, output, session) {
           title = "Job Type", width = 12,
           # The id lets us use input$tab_genJType on the server to find the current tab
           id = "tab_genJType",
-          tabPanel("Job type chart", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("jobTypeDonutTxt"), plotlyOutput("jobTypeDonut")),
+          tabPanel("Job type chart", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("jobTypeDonutTxt"), plotlyOutput("jobTypeDonut")),
           # tabPanel("Job type bar chart", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("jobTypeBarTxt"), plotlyOutput("jobTypeBar")),
           tabPanel("Job type data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("jobTypeTable"))
         )
@@ -1476,7 +1477,7 @@ function(input, output, session) {
           title = "Job Specifics", width = 12,
           # The id lets us use input$tab_genJSpec on the server to find the current tab
           id = "tab_genJSpec",
-          tabPanel("Job specifics chart", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("jobSpecDonutTxt"), plotlyOutput("jobSpecDonut")),
+          tabPanel("Job specifics chart", style = "overflow-x:scroll; overflow-y:scroll; height: 600px", htmlOutput("jobSpecDonutTxt"), plotlyOutput("jobSpecDonut")),
           # tabPanel("Job specifics bar chart", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("jobSpecBarTxt"), plotlyOutput("jobSpecBar")),
           tabPanel("Job specifics data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("jobSpecTable"))
         )
@@ -1833,7 +1834,7 @@ function(input, output, session) {
           title = "Tenure track", width = 12,
           # The id lets us use input$tab_hlTT on the server to find the current tab
           id = "tab_hlTT",
-          tabPanel("Tenure track plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("hlTenureTxt"), sunburstOutput("hlTenurePlot", width = input$sldWidthHl, height = input$sldHeightHl)),
+          tabPanel("Tenure track plot", style = "overflow-x:scroll; overflow-y:scroll; height: 600px", htmlOutput("hlTenureTxt"), sunburstOutput("hlTenurePlot", width = input$sldWidthHl, height = input$sldHeightHl)),
           tabPanel("Tenure track data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("hlTenureTable"))
         )
       )
@@ -1845,7 +1846,7 @@ function(input, output, session) {
           title = "Additional postdoc", width = 12,
           # The id lets us use input$tab_hlAT on the server to find the current tab
           id = "tab_hlAT",
-          tabPanel("Addt'l postdoc plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("hlTrainTxt"), sunburstOutput("hlTrainPlot", width = input$sldWidthHl, height = input$sldHeightHl)),
+          tabPanel("Addt'l postdoc plot", style = "overflow-x:scroll; overflow-y:scroll; height: 600px", htmlOutput("hlTrainTxt"), sunburstOutput("hlTrainPlot", width = input$sldWidthHl, height = input$sldHeightHl)),
           tabPanel("Addt'l postdoc data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("hlTrainTable"))
         )
       )
@@ -2171,7 +2172,7 @@ function(input, output, session) {
           title = "Training time (Job sector)", width = 12,
           # The id lets us use input$tab_tmSect on the server to find the current tab
           id = "tab_tmSect",
-          tabPanel("Box plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("tmSectTxt"), plotlyOutput("tmSectPlot")),
+          tabPanel("Box plot", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("tmSectTxt"), plotlyOutput("tmSectPlot")),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("tmSectTable"))
         )
       )
@@ -2183,7 +2184,7 @@ function(input, output, session) {
           title = "Training time (Job type)", width = 12,
           # The id lets us use input$tab_tmType on the server to find the current tab
           id = "tab_tmType",
-          tabPanel("Box plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("tmTypeTxt"), plotlyOutput("tmTypePlot", height=input$sldHeightTm)),
+          tabPanel("Box plot", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("tmTypeTxt"), plotlyOutput("tmTypePlot", height=input$sldHeightTm)),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("tmTypeTable"))
         )
       )
@@ -2195,7 +2196,7 @@ function(input, output, session) {
           title = "Training time (Job specifics)", width = 12,
           # The id lets us use input$tab_tmSpec on the server to find the current tab
           id = "tab_tmSpec",
-          tabPanel("Box plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("tmSpecTxt"), plotlyOutput("tmSpecPlot")),
+          tabPanel("Box plot", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("tmSpecTxt"), plotlyOutput("tmSpecPlot")),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("tmSpecTable"))
         )
       )
@@ -2207,7 +2208,7 @@ function(input, output, session) {
           title = "Training time (Gender differences)", width = 12,
           # The id lets us use input$tab_tmGndr on the server to find the current tab
           id = "tab_tmGndr",
-          tabPanel("Box plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("tmGndrTxt"), plotlyOutput("tmGndrPlot")),
+          tabPanel("Box plot", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("tmGndrTxt"), plotlyOutput("tmGndrPlot")),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("tmGndrTable"))
         )
       )
@@ -3169,7 +3170,7 @@ function(input, output, session) {
           title = "Job category", width = 12,
           # The id lets us use input$ctJob on the server to find the current tab
           id = "tab_ctJob",
-          tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("cntrJobTxt"), plotOutput("cntrJobPlot")),
+          tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("cntrJobTxt"), plotOutput("cntrJobPlot")),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("cntrJobTable"))
         )
       )
@@ -3181,7 +3182,7 @@ function(input, output, session) {
           title = "Training time", width = 12,
           # The id lets us use input$tab_ctTime on the server to find the current tab
           id = "tab_ctTime",
-          tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("cntrTimeTxt"), plotOutput("cntrTimePlot")),
+          tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("cntrTimeTxt"), plotOutput("cntrTimePlot")),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("cntrTimeTable"))
         )
       )
@@ -3193,7 +3194,7 @@ function(input, output, session) {
           title = "Gender", width = 12,
           # The id lets us use input$tab_ctGender on the server to find the current tab
           id = "tab_ctGender",
-          tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("cntrGenderTxt"), plotOutput("cntrGenderPlot")),
+          tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("cntrGenderTxt"), plotOutput("cntrGenderPlot")),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("cntrGenderTable"))
         )
       )
@@ -3205,7 +3206,7 @@ function(input, output, session) {
           title = "Location", width = 12,
           # The id lets us use input$tab_ctLocation on the server to find the current tab
           id = "tab_ctLocation",
-          tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("cntrLocationTxt"), plotOutput("cntrLocationPlot")),
+          tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("cntrLocationTxt"), plotOutput("cntrLocationPlot")),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("cntrLocationTable"))
         )
       )
@@ -3630,7 +3631,7 @@ function(input, output, session) {
           title = "Job sector", width = 12,
           # The id lets us use input$tab_dgSect on the server to find the current tab
           id = "tab_dgSect",
-          tabPanel("Pointrange plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("degrJSectTxt"), plotOutput("degrJSectPlot")),
+          tabPanel("Pointrange plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("degrJSectTxt"), plotOutput("degrJSectPlot")),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("degrJSectTable"))
         )
       )
@@ -3642,7 +3643,7 @@ function(input, output, session) {
           title = "Job type", width = 12,
           # The id lets us use input$tab_dgType on the server to find the current tab
           id = "tab_dgType",
-          tabPanel("Pointrange plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("degrJTypeTxt"), plotOutput("degrJTypePlot")),
+          tabPanel("Pointrange plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("degrJTypeTxt"), plotOutput("degrJTypePlot")),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("degrJTypeTable"))
         )
       )
@@ -3654,7 +3655,7 @@ function(input, output, session) {
           title = "Job specifics", width = 12,
           # The id lets us use input$tab_dgSpec on the server to find the current tab
           id = "tab_dgSpec",
-          tabPanel("Pointrange plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("degrJSpecTxt"), plotOutput("degrJSpecPlot")),
+          tabPanel("Pointrange plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("degrJSpecTxt"), plotOutput("degrJSpecPlot")),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("degrJSpecTable"))
         )
       )
