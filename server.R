@@ -155,7 +155,8 @@ function(input, output, session) {
     
     # likert plot
     ltAll <- likert(summary=ldAll)
-    p1 <- plot(ltAll, colors=inColors, text.size=4) + ggtitle(titleAll) + theme(plot.title = element_text(hjust = 0.5), axis.text=element_text(size=12,face="bold"))
+    # p1 <- plot(ltAll, colors=inColors, text.size=4) + ggtitle(titleAll) + theme(plot.title = element_text(hjust = 0.5), axis.text=element_text(size=12,face="bold"))
+    p1 <- plot(ltAll, colors=inColors) + ggtitle(titleAll) + theme(plot.title = element_text(hjust = 0.5), axis.text=element_text(size=12,face="bold"))
     p1 <- p1 + guides(fill=guide_legend(title=inType)) + geom_label(data=dcAll, aes(x=Item, y = 1, label=Count))
           # annotate("text", x=dcAll$Item, y = 1, label=dcAll$Count, colour = "#e6e600", fontface =2)
     ltCat <- likert(summary=ldCat)
