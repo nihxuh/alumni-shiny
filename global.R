@@ -10,7 +10,7 @@ library(stringr)
 library(migest)
 library(RColorBrewer)
 library(circlize)
-library(choroplethr)
+library(choroplethr) # for state map
 library(choroplethrMaps)
 library(likert) # for likert plot
 library(shiny)

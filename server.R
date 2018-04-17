@@ -1,4 +1,4 @@
-## server.R ##
+## server.R ## 
 function(input, output, session) {
   # set ggplot2 default font size to 12
   ggplot2::theme_set(theme_classic(base_size = 14))
