@@ -44,3 +44,22 @@ td {
 
 tr:nth-child(odd)		{ background-color:#eee; }
 tr:nth-child(even)		{ background-color:#fff; }
+
+
+/* main sidebar */
+.skin-blue .main-sidebar { background-color: #026389; }
+
+/* active selected tab in the sidebarmenu */
+.skin-blue .main-sidebar .sidebar .sidebar-menu .active a{ background-color: #FFFFFF;                                                                                        color: #72898D }
+
+/* submenu in the sidebarmenu */
+.skin-blue .main-sidebar .sidebar .sidebar-menu .treeview-menu a{ background-color: #2E7CA3;
+                                                                  color: #FFFFFF;}  
+
+/* other links in the sidebarmenu when hovered */
+.skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{ background-color: #FFFFFF;
+                                                         color: #72898D }
+                                                         
+.pre_anchor {
+  padding: 4px;
+  background-color: #000000; color: #FFFFFF }

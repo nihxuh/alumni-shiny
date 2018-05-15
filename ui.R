@@ -1,9 +1,8 @@
 ## ui.R ##
 
-
 header <- dashboardHeader(
-  title = paste0(nameInstitute, " Alumni Career Outcomes"),
-  titleWidth = 320
+  title = paste0(nameInstitute, " Postdocs")
+  # titleWidth = 320
 )
 
 # https://stackoverflow.com/questions/31440564/adding-a-company-logo-to-shinydashboard-header
@@ -143,6 +142,11 @@ body <- dashboardBody(
   tabItems(
     tabItem("project",
       fluidRow(
+        column(12, align="right",
+          HTML("<p><a class='pre_anchor'; href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'>Return to Career Development</a></p>")
+        )
+      ),
+      fluidRow(
         valueBoxOutput("years"),
         valueBoxOutput("total"),
         valueBoxOutput("coverage")
@@ -160,6 +164,11 @@ body <- dashboardBody(
  
        
     tabItem("taxonomy",
+      fluidRow(
+        column(12, align="right",
+          HTML("<p><a class='pre_anchor'; href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'>Return to Career Development</a></p>")
+        )
+      ),
       fluidRow(
         box(
           title = "JOB TAXONOMY", width = 12, solidHeader = TRUE,
@@ -191,6 +200,11 @@ body <- dashboardBody(
         
     tabItem("demograph",
       fluidRow(
+        column(12, align="right",
+          HTML("<p><a class='pre_anchor'; href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'>Return to Career Development</a></p>")
+        )
+      ),
+      fluidRow(
         box(
           title = "ALUMNI DEMOGRAPHICS", width = 12, solidHeader = TRUE,
           paste0("From ", minYrs, " to ", maxYrs, ", ", tMalePct, " percent of alumni are male, the rest are female. ", 
@@ -219,6 +233,11 @@ body <- dashboardBody(
     
     
     tabItem("location",
+      fluidRow(
+        column(12, align="right",
+          HTML("<p><a class='pre_anchor'; href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'>Return to Career Development</a></p>")
+        )
+      ),
       fluidRow(
         box(
           title = "JOB LOCATION", width = 12, solidHeader = TRUE,
@@ -250,6 +269,11 @@ body <- dashboardBody(
     
     tabItem("general",
       fluidRow(
+        column(12, align="right",
+          HTML("<p><a class='pre_anchor'; href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'>Return to Career Development</a></p>")
+        )
+      ),
+      fluidRow(
         box(title = "GENERAL CAREER OUTCOMES", width = 12, solidHeader = TRUE,
             paste0("From 2000 to 2014, a large pecentage ", max(tGnrSectorPct), "% of alumni are employed in '", names(which(tGnrSectorPct==max(tGnrSectorPct))), "' Job Sector. ",
                    "More alumni ", max(tGnrTypePct), "% work as '", names(which(tGnrTypePct==max(tGnrTypePct))), "' than any other Job Type. ",
@@ -278,6 +302,11 @@ body <- dashboardBody(
 
     tabItem("relation",
       fluidRow(
+        column(12, align="right",
+          HTML("<p><a class='pre_anchor'; href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'>Return to Career Development</a></p>")
+        )
+      ),
+      fluidRow(
         box(title = "RELATIONSHIP BETWEEN JOB SECTORS, JOB TYPES AND JOB SPECIFICS", width = 12, solidHeader = TRUE,
             HTML("The width of the lines is proportional to the relative quantity of scholars within each group. 
                  <i>(Left & Middle) Division of job sectors by job type.</i> Focusing on the academic sector as an example, it can be seen that not all academic positions are tenure-track. The remainder of those in the academic sector are divided between professional, management, support, non-tenure-track, or trainee job types. 
@@ -303,6 +332,11 @@ body <- dashboardBody(
     
     tabItem("highlight",
       fluidRow(
+        column(12, align="right",
+          HTML("<p><a class='pre_anchor'; href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'>Return to Career Development</a></p>")
+        )
+      ),
+      fluidRow(
         box(title = "CAREER OUTCOME HIGHLIGHTS", width = 12, solidHeader = TRUE,
             "In job sub-groups, there are big differences between international fellows and US fellows.")
       ),
@@ -325,6 +359,11 @@ body <- dashboardBody(
     
     
     tabItem("time",
+      fluidRow(
+        column(12, align="right",
+          HTML("<p><a class='pre_anchor'; href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'>Return to Career Development</a></p>")
+        )
+      ),
       fluidRow(
         box(title = "TRAINING TIME", width = 12, solidHeader = TRUE,
             paste0("The overall average time spent at NIEHS was ", cntAvgTime, 
@@ -354,6 +393,11 @@ body <- dashboardBody(
     
     
     tabItem("country",
+      fluidRow(
+        column(12, align="right",
+          HTML("<p><a class='pre_anchor'; href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'>Return to Career Development</a></p>")
+        )
+      ),
       fluidRow(
         box(
           title = "COMPARISON OF FELLOWS BASED ON THEIR COUNTRY OF ORIGIN", width = 12, solidHeader = TRUE,
@@ -385,6 +429,11 @@ body <- dashboardBody(
 
     
     tabItem("degree",
+      fluidRow(
+        column(12, align="right",
+          HTML("<p><a class='pre_anchor'; href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'>Return to Career Development</a></p>")
+        )
+      ),
       fluidRow(
         box(
           title = "DOCTORAL DEGREE FIELD OF STUDY", width = 12, solidHeader = TRUE,
