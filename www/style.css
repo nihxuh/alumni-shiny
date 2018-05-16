@@ -50,11 +50,15 @@ tr:nth-child(even)		{ background-color:#fff; }
 .skin-blue .main-sidebar { background-color: #026389; }
 
 /* active selected tab in the sidebarmenu */
-.skin-blue .main-sidebar .sidebar .sidebar-menu .active a{ background-color: #FFFFFF;                                                                                        color: #72898D }
+.skin-blue .main-sidebar .sidebar .sidebar-menu .active a{ background-color: #FFFFFF;                                                                                       color: #72898D }
 
 /* submenu in the sidebarmenu */
 .skin-blue .main-sidebar .sidebar .sidebar-menu .treeview-menu a{ background-color: #2E7CA3;
-                                                                  color: #FFFFFF;}  
+                                                                  color: #FFFFFF;}
+                                                                  
+/* submenu selected in the sidebarmenu */
+.skin-blue .main-sidebar .sidebar .sidebar-menu .treeview-menu .active a{ background-color: #FFFFFF;
+                                                                          color: #72898D}  
 
 /* other links in the sidebarmenu when hovered */
 .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{ background-color: #FFFFFF;
