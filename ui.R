@@ -2,7 +2,6 @@
 
 header <- dashboardHeader(
   title = paste0(nameInstitute, " Postdocs")
-  # titleWidth = 320
 )
 
 # https://stackoverflow.com/questions/31440564/adding-a-company-logo-to-shinydashboard-header

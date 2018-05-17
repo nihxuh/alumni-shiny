@@ -1,7 +1,7 @@
 ## server.R ## 
 function(input, output, session) {
   # set ggplot2 default font size to 12
-  ggplot2::theme_set(theme_classic(base_size = 14))
+  ggplot2::theme_set(theme_classic(base_size = 14)) 
 
   # wrap string
   wrap_strings <- function(vector_of_strings,width) {
