@@ -136,7 +136,8 @@ side <- dashboardSidebar(
 
 body <- dashboardBody(
   singleton(
-    tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "style.css"))    # tags$head(tags$style(HTML('.info-box {min-height: 45px;} .info-box-icon {height: 45px; line-height: 45px;} .info-box-content {padding-top: 0px; padding-bottom: 0px;}'))),
+    tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "style.css"))    
+    # tags$head(tags$style(HTML('.info-box {min-height: 45px;} .info-box-icon {height: 45px; line-height: 45px;} .info-box-content {padding-top: 0px; padding-bottom: 0px;}'))),
   ),
 
   tabItems(
@@ -144,7 +145,7 @@ body <- dashboardBody(
       fluidRow(
         column(12, align="right",
           actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
-                     onclick ="location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
+                     onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'"),
           HTML("<p></p>")
         )
       ),
@@ -169,7 +170,7 @@ body <- dashboardBody(
       fluidRow(
         column(12, align="right",
                actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
-                            onclick ="location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
+                            onclick ="javascript:parent.window.location.href=='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
       ),
@@ -206,7 +207,7 @@ body <- dashboardBody(
       fluidRow(
         column(12, align="right",
                actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
-                            onclick ="location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
+                            onclick ="javascript:parent.window.location.href=='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
       ),
@@ -242,7 +243,7 @@ body <- dashboardBody(
       fluidRow(
         column(12, align="right",
                actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
-                            onclick ="location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
+                            onclick ="javascript:parent.window.location.href=='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
       ),
@@ -279,7 +280,7 @@ body <- dashboardBody(
       fluidRow(
         column(12, align="right",
                actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
-                            onclick ="location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
+                            onclick ="javascript:parent.window.location.href=='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
       ),
@@ -314,7 +315,7 @@ body <- dashboardBody(
       fluidRow(
         column(12, align="right",
                actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
-                            onclick ="location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
+                            onclick ="javascript:parent.window.location.href=='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
       ),
@@ -346,7 +347,7 @@ body <- dashboardBody(
       fluidRow(
         column(12, align="right",
                actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
-                            onclick ="location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
+                            onclick ="javascript:parent.window.location.href=='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
       ),
@@ -376,7 +377,7 @@ body <- dashboardBody(
       fluidRow(
         column(12, align="right",
                actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
-                            onclick ="location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
+                            onclick ="javascript:parent.window.location.href=='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
       ),
@@ -412,7 +413,7 @@ body <- dashboardBody(
       fluidRow(
         column(12, align="right",
                actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
-                            onclick ="location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
+                            onclick ="javascript:parent.window.location.href=='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
       ),
@@ -450,7 +451,7 @@ body <- dashboardBody(
       fluidRow(
         column(12, align="right",
                actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
-                            onclick ="location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
+                            onclick ="javascript:parent.window.location.href=='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
       ),
@@ -513,11 +514,4 @@ dashboardPage(
 #   https://stackoverflow.com/questions/31920286/effectively-debugging-shiny-apps
 
 # redirect URLs
-#   https://stackoverflow.com/questions/47157880/redirect-in-shiny-app
-#   https://stackoverflow.com/questions/46094396/capture-click-within-iframe-in-a-shiny-app/46164975#46164975
-#   https://stackoverflow.com/questions/13439303/detect-click-event-inside-iframe/46093537#46093537
-#   http://www.open-meta.org/technology/how-to-get-shiny-on-the-server-and-javascript-in-the-browser-talking-to-each-other/
-#   https://appendto.com/2016/04/javascript-redirect-how-to-redirect-a-web-page-with-javascript/
-#   
-
-
+#   https://stackoverflow.com/questions/9247067/when-someone-clicks-a-link-in-an-iframe-navigate-the-entire-window
