@@ -145,7 +145,7 @@ body <- dashboardBody(
       fluidRow(
         column(12, align="right",
           actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
-                     onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'"),
+                       onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'"),
           HTML("<p></p>")
         )
       ),
@@ -170,7 +170,7 @@ body <- dashboardBody(
       fluidRow(
         column(12, align="right",
                actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
-                            onclick ="javascript:parent.window.location.href=='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
+                            onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
       ),
@@ -207,7 +207,7 @@ body <- dashboardBody(
       fluidRow(
         column(12, align="right",
                actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
-                            onclick ="javascript:parent.window.location.href=='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
+                            onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
       ),
@@ -243,7 +243,7 @@ body <- dashboardBody(
       fluidRow(
         column(12, align="right",
                actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
-                            onclick ="javascript:parent.window.location.href=='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
+                            onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
       ),
@@ -280,7 +280,7 @@ body <- dashboardBody(
       fluidRow(
         column(12, align="right",
                actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
-                            onclick ="javascript:parent.window.location.href=='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
+                            onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
       ),
@@ -315,7 +315,7 @@ body <- dashboardBody(
       fluidRow(
         column(12, align="right",
                actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
-                            onclick ="javascript:parent.window.location.href=='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
+                            onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
       ),
@@ -347,7 +347,7 @@ body <- dashboardBody(
       fluidRow(
         column(12, align="right",
                actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
-                            onclick ="javascript:parent.window.location.href=='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
+                            onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
       ),
@@ -377,7 +377,7 @@ body <- dashboardBody(
       fluidRow(
         column(12, align="right",
                actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
-                            onclick ="javascript:parent.window.location.href=='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
+                            onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
       ),
@@ -413,7 +413,7 @@ body <- dashboardBody(
       fluidRow(
         column(12, align="right",
                actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
-                            onclick ="javascript:parent.window.location.href=='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
+                            onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
       ),
@@ -451,7 +451,7 @@ body <- dashboardBody(
       fluidRow(
         column(12, align="right",
                actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
-                            onclick ="javascript:parent.window.location.href=='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
+                            onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
       ),
