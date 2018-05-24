@@ -136,15 +136,15 @@ side <- dashboardSidebar(
 
 body <- dashboardBody(
   singleton(
-    tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "style.css"))    
+    tags$head(includeHTML("dap.html"), tags$link(rel = "stylesheet", type = "text/css", href = "style.css"))
     # tags$head(tags$style(HTML('.info-box {min-height: 45px;} .info-box-icon {height: 45px; line-height: 45px;} .info-box-content {padding-top: 0px; padding-bottom: 0px;}'))),
   ),
-
+  
   tabItems(
     tabItem("project",
       fluidRow(
         column(12, align="right",
-          actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
+          actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
                        onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'"),
           HTML("<p></p>")
         )
@@ -169,7 +169,7 @@ body <- dashboardBody(
     tabItem("taxonomy",
       fluidRow(
         column(12, align="right",
-               actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
+               actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
                             onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
@@ -206,7 +206,7 @@ body <- dashboardBody(
     tabItem("demograph",
       fluidRow(
         column(12, align="right",
-               actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
+               actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
                             onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
@@ -242,7 +242,7 @@ body <- dashboardBody(
     tabItem("location",
       fluidRow(
         column(12, align="right",
-               actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
+               actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
                             onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
@@ -279,7 +279,7 @@ body <- dashboardBody(
     tabItem("general",
       fluidRow(
         column(12, align="right",
-               actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
+               actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
                             onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
@@ -314,7 +314,7 @@ body <- dashboardBody(
     tabItem("relation",
       fluidRow(
         column(12, align="right",
-               actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
+               actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
                             onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
@@ -346,7 +346,7 @@ body <- dashboardBody(
     tabItem("highlight",
       fluidRow(
         column(12, align="right",
-               actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
+               actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
                             onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
@@ -376,7 +376,7 @@ body <- dashboardBody(
     tabItem("time",
       fluidRow(
         column(12, align="right",
-               actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
+               actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
                             onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
@@ -412,7 +412,7 @@ body <- dashboardBody(
     tabItem("country",
       fluidRow(
         column(12, align="right",
-               actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
+               actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
                             onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
@@ -450,7 +450,7 @@ body <- dashboardBody(
     tabItem("degree",
       fluidRow(
         column(12, align="right",
-               actionButton(inputId = "goHome", label = "Return to Career Development", class="pre_anchor",
+               actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
                             onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
                HTML("<p></p>")
         )
