@@ -1,24 +1,24 @@
 # load all R packages
-library(reshape2) 
+# library(reshape2)
 library(data.table)
-library(tidyr)
-
-library(ggplot2)
+library(tidyverse)
 library(ggrepel)
 library(scales)
 library(stringr)
 library(migest)
 library(RColorBrewer)
 library(circlize)
-library(choroplethr) # for state map
+library(choroplethr)
 library(choroplethrMaps)
 library(likert) # for likert plot
 library(shiny)
-library(dplyr)
 library(shinydashboard)
 library(plotly)
 library(sunburstR)
 library(gridExtra)
+
+# plotly Sankey use json data as input (07/23/2020)
+library(rjson)
 
 # read in data
 dataGroup <- read.csv("sourceData.csv")
@@ -30,23 +30,29 @@ alnCount = nrow(dataGroup)
 # get intitute name
 nameInstitute <- dataGroup$institute[1]
 
+# convert all factor columns to character columns 
+# https://stackoverflow.com/questions/47633241/convert-all-factor-columns-to-character-in-a-data-frame-without-affecting-non-fa
+dataGroup <- dataGroup %>% mutate_if(is.factor, as.character)
+
+### convert long entry names to short entry names for data visualization
+# convert long name of job sector to short name
+dataGroup$job_sector[dataGroup$job_sector == 'Independent/self-employed'] <- "Indep./self-employed"
+
 # convert long name of job specifics to short name
-dataGroup$specifics <- as.character(dataGroup$specifics)
 dataGroup$specifics[dataGroup$specifics == 'Science administration/project management'] <- "Science admin./PMT"
 dataGroup$specifics[dataGroup$specifics == 'Science writing or communications'] <- 'Science writing or comm.'
 dataGroup$specifics[dataGroup$specifics == 'Additional postdoctoral training'] <- 'Additional postdoc'
-dataGroup$specifics <- factor(dataGroup$specifics)
-
-# convert long name of job sector to short name
-dataGroup$job_sector <- as.character(dataGroup$job_sector)
-dataGroup$job_sector[dataGroup$job_sector == 'Independent/self-employed'] <- "Indep./self-employed"
-dataGroup$job_sector <- factor(dataGroup$job_sector)
 
 # (3/22/18) replace "Unknown" with "Degree Unknown" in "degree_category"
-dataGroup$degree_category <- as.character(dataGroup$degree_category)
 dataGroup$degree_category[dataGroup$degree_category == 'Unknown'] <- "Degree Unknown"
-dataGroup$degree_category <- factor(dataGroup$degree_category)
 
+# Convert job functions which are not in top 12 to 'REST COMBINED' for better data visualization
+tblJobSpec <- table(dataGroup[,"specifics"])
+nameRestSpec <- names(tail(sort(tblJobSpec, decreasing = TRUE), -12))
+dataGroup$specifics[dataGroup$specifics %in% nameRestSpec] <- "REST COMBINED"
+
+# convert character columns back to factor columns 
+dataGroup <- dataGroup %>% mutate_if(is.character, as.factor)
 
 # get the time period data for UI
 timePeriods <- unique(sort(dataGroup$years))
@@ -57,6 +63,56 @@ minYrs <- min(timeYrs)
 maxYrs <- max(timeYrs)
 totalYrs <- paste0(minYrs,'-',maxYrs)
 trendYrs <- paste0(timePeriods, collapse = ",")
+
+# prepare choice 
+choiceAll <- 'Whole time (2000-2019)'
+choiceYrs <- paste0('Left NIEHS in ', timePeriods)
+choiceYrs <- c(choiceAll, choiceYrs)
+
+
+
+##### Definition for colors
+# gender colors
+genderColors = c("#D81B60", "#4F94CD")
+# visiting colors
+visitColors = c("#47427e","#6cc06d")
+
+#>>> general career plot start
+colorJSect = c("Academic institution"="#94363a",
+               "For-profit company"="#f19493",
+               "Government agency"="#b15426",
+               "Indep./self-employed"="#f285a8",
+               "Non-profit organization"="#933761",
+               "Unknown or Undecided"="#da9a54",
+               "All sectors"="#000000")
+
+colorJType = c("Management"="#24594d",
+               "Non-tenure track faculty" ="#8acfbf",
+               "Professional staff"="#255a2d",
+               "Support staff"="#23787a",
+               "Tenure track faculty"="#6cc06d",
+               "Trainee" ="#5e7e37", 
+               "Unknown or Undecided"="#89c658",
+               "All types"="#000000")
+
+colorJSpec = c("Additional postdoc"="#225f7b",
+               "Computation/informatics"="#a792c5",
+               "Consulting"="#655F9F",
+               "Grants management"="#5655A9",
+               "Primarily applied research"="#8b9fd1",
+               "Primarily basic research"="#243e7d",
+               "Primarily clinical research"="#747fbe",
+               "Primarily clinical practice"="#7c74be",
+               "Primarily teaching"="#6b417d",
+               "Regulatory affairs"="#23787a",
+               "REST COMBINED"="#47427e",
+               "Science admin./PMT"="#85357a",
+               "Science writing or comm."="#c06aaa",
+               "Technical/customer support"="#4bc4d2",
+               "Unknown or Undecided"="#8dbbd8",
+               "All specifics"="#000000")
+
+
 
 # demographical percentage count
 tGender = table(dataGroup[,"gender"])
@@ -73,10 +129,10 @@ tGnrSpecifics = table(dataGroup[,"specifics"])
 tGnrSpecPct = round(tGnrSpecifics / alnCount, 3) * 100
 
 # training time
-cntAvgTime = round(mean(dataGroup$months_postdoc),1)
-cntAcdTime = round(mean(dataGroup$months_postdoc[dataGroup$job_sector == "Academic institution"]),1)
-cntGvnTime = round(mean(dataGroup$months_postdoc[dataGroup$job_sector == "Government agency"]),1)
-cntPrfTime = round(mean(dataGroup$months_postdoc[dataGroup$job_sector == "For-profit company"]),1)
+cntAvgTime = round(mean(dataGroup$months_postdoc,na.rm=TRUE),1)
+cntAcdTime = round(mean(dataGroup$months_postdoc[dataGroup$job_sector == "Academic institution"],na.rm=TRUE),1)
+cntGvnTime = round(mean(dataGroup$months_postdoc[dataGroup$job_sector == "Government agency"],na.rm=TRUE),1)
+cntPrfTime = round(mean(dataGroup$months_postdoc[dataGroup$job_sector == "For-profit company"],na.rm=TRUE),1)
 
 # use dplyr to summarize gender information
 # http://stackoverflow.com/questions/24576515/relative-frequencies-proportions-with-dplyr
@@ -241,49 +297,48 @@ colnames(dfJobSpecYrs) <- c('years','Specifics','Count','Postdoc')
 
 
 # average time in NIEHS by job sector
-dfTimeSectAll <- dataGroup %>% group_by(job_sector) %>% summarise(avg_time=round(mean(months_postdoc),digits = 1), min_time=min(months_postdoc), max_time=max(months_postdoc), num_data=n())
+dfTimeSectAll <- dataGroup %>% group_by(job_sector) %>% summarise(avg_time=round(mean(months_postdoc, na.rm=TRUE),digits = 1), min_time=min(months_postdoc,na.rm=TRUE), max_time=max(months_postdoc,na.rm=TRUE), num_data=n())
 dfTimeSectAll$job_sector <- as.character(dfTimeSectAll$job_sector)
-dfTimeSectAll <- bind_rows(dfTimeSectAll, dataGroup %>% summarise(avg_time=round(mean(months_postdoc),digits = 1), min_time=min(months_postdoc), max_time=max(months_postdoc), num_data=n()) %>% mutate(job_sector="All sectors"))
-dfTimeSectYrs <- dataGroup %>% group_by(years, job_sector) %>% summarise(avg_time=round(mean(months_postdoc),digits = 1), min_time=min(months_postdoc), max_time=max(months_postdoc), num_data=n())
+dfTimeSectAll <- bind_rows(dfTimeSectAll, dataGroup %>% summarise(avg_time=round(mean(months_postdoc, na.rm=TRUE),digits = 1), min_time=min(months_postdoc,na.rm=TRUE), max_time=max(months_postdoc,na.rm=TRUE), num_data=n()) %>% mutate(job_sector="All sectors"))
+dfTimeSectYrs <- dataGroup %>% group_by(years, job_sector) %>% summarise(avg_time=round(mean(months_postdoc, na.rm=TRUE),digits = 1), min_time=min(months_postdoc,na.rm=TRUE), max_time=max(months_postdoc,na.rm=TRUE), num_data=n())
 # (10/06/2016): change from rbind to bind_rows (dplyr) to fix the error of combine two data frames into list
 #   http://stackoverflow.com/questions/3402371/combine-two-data-frames-by-rows-rbind-when-they-have-different-sets-of-columns
-# dfTimeSectYrs <- rbind(dfTimeSectYrs, dataGroup %>% group_by(years) %>% summarise(avg_time=round(mean(months_postdoc),digits = 1), min_time=min(months_postdoc), max_time=max(months_postdoc), num_data=n()) %>% mutate(job_sector="All sectors"))
+# dfTimeSectYrs <- rbind(dfTimeSectYrs, dataGroup %>% group_by(years) %>% summarise(avg_time=round(mean(months_postdoc, na.rm=TRUE),digits = 1), min_time=min(months_postdoc,na.rm=TRUE), max_time=max(months_postdoc,na.rm=TRUE), num_data=n()) %>% mutate(job_sector="All sectors"))
 dfTimeSectYrs$job_sector <- as.character(dfTimeSectYrs$job_sector)
-dfTimeSectYrs <- bind_rows(dfTimeSectYrs, dataGroup %>% group_by(years) %>% summarise(avg_time=round(mean(months_postdoc),digits = 1), min_time=min(months_postdoc), max_time=max(months_postdoc), num_data=n()) %>% mutate(job_sector="All sectors"))
+dfTimeSectYrs <- bind_rows(dfTimeSectYrs, dataGroup %>% group_by(years) %>% summarise(avg_time=round(mean(months_postdoc, na.rm=TRUE),digits = 1), min_time=min(months_postdoc,na.rm=TRUE), max_time=max(months_postdoc,na.rm=TRUE), num_data=n()) %>% mutate(job_sector="All sectors"))
 
 
 # average time in NIEHS by job type
-dfTimeTypeAll <- dataGroup %>% group_by(job_type) %>% summarise(avg_time=round(mean(months_postdoc),digits = 1), min_time=min(months_postdoc), max_time=max(months_postdoc), num_data=n())
+dfTimeTypeAll <- dataGroup %>% group_by(job_type) %>% summarise(avg_time=round(mean(months_postdoc, na.rm=TRUE),digits = 1), min_time=min(months_postdoc,na.rm=TRUE), max_time=max(months_postdoc,na.rm=TRUE), num_data=n())
 dfTimeTypeAll$job_type <- as.character(dfTimeTypeAll$job_type)
-dfTimeTypeAll <- bind_rows(dfTimeTypeAll, dataGroup %>% summarise(avg_time=round(mean(months_postdoc),digits = 1), min_time=min(months_postdoc), max_time=max(months_postdoc), num_data=n()) %>% mutate(job_type="All types"))
-dfTimeTypeYrs <- dataGroup %>% group_by(years, job_type) %>% summarise(avg_time=round(mean(months_postdoc),digits = 1), min_time=min(months_postdoc), max_time=max(months_postdoc), num_data=n())
+dfTimeTypeAll <- bind_rows(dfTimeTypeAll, dataGroup %>% summarise(avg_time=round(mean(months_postdoc, na.rm=TRUE),digits = 1), min_time=min(months_postdoc,na.rm=TRUE), max_time=max(months_postdoc,na.rm=TRUE), num_data=n()) %>% mutate(job_type="All types"))
+dfTimeTypeYrs <- dataGroup %>% group_by(years, job_type) %>% summarise(avg_time=round(mean(months_postdoc, na.rm=TRUE),digits = 1), min_time=min(months_postdoc,na.rm=TRUE), max_time=max(months_postdoc,na.rm=TRUE), num_data=n())
 dfTimeTypeYrs$job_type <- as.character(dfTimeTypeYrs$job_type)
-dfTimeTypeYrs <- bind_rows(dfTimeTypeYrs, dataGroup %>% group_by(years) %>% summarise(avg_time=round(mean(months_postdoc),digits = 1), min_time=min(months_postdoc), max_time=max(months_postdoc), num_data=n()) %>% mutate(job_type="All types"))
+dfTimeTypeYrs <- bind_rows(dfTimeTypeYrs, dataGroup %>% group_by(years) %>% summarise(avg_time=round(mean(months_postdoc, na.rm=TRUE),digits = 1), min_time=min(months_postdoc,na.rm=TRUE), max_time=max(months_postdoc,na.rm=TRUE), num_data=n()) %>% mutate(job_type="All types"))
 
 
 # average time in NIEHS by job specifics
-dfTimeSpecAll <- dataGroup %>% group_by(specifics) %>% summarise(avg_time=round(mean(months_postdoc),digits = 1), min_time=min(months_postdoc), max_time=max(months_postdoc), num_data=n())
+dfTimeSpecAll <- dataGroup %>% group_by(specifics) %>% summarise(avg_time=round(mean(months_postdoc,na.rm=TRUE),digits = 1), min_time=min(months_postdoc,na.rm=TRUE), max_time=max(months_postdoc,na.rm=TRUE), num_data=n())
 dfTimeSpecAll$specifics <- as.character(dfTimeSpecAll$specifics)
-dfTimeSpecAll <- bind_rows(dfTimeSpecAll, dataGroup %>% summarise(avg_time=round(mean(months_postdoc),digits = 1), min_time=min(months_postdoc), max_time=max(months_postdoc), num_data=n()) %>% mutate(specifics="All specifics"))
-dfTimeSpecYrs <- dataGroup %>% group_by(years, specifics) %>% summarise(avg_time=round(mean(months_postdoc),digits = 1), min_time=min(months_postdoc), max_time=max(months_postdoc), num_data=n())
+dfTimeSpecAll <- bind_rows(dfTimeSpecAll, dataGroup %>% summarise(avg_time=round(mean(months_postdoc,na.rm=TRUE),digits = 1), min_time=min(months_postdoc,na.rm=TRUE), max_time=max(months_postdoc,na.rm=TRUE), num_data=n()) %>% mutate(specifics="All specifics"))
+dfTimeSpecYrs <- dataGroup %>% group_by(years, specifics) %>% summarise(avg_time=round(mean(months_postdoc,na.rm=TRUE),digits = 1), min_time=min(months_postdoc,na.rm=TRUE), max_time=max(months_postdoc,na.rm=TRUE), num_data=n())
 dfTimeSpecYrs$specifics <- as.character(dfTimeSpecYrs$specifics)
-dfTimeSpecYrs <- bind_rows(dfTimeSpecYrs, dataGroup %>% group_by(years) %>% summarise(avg_time=round(mean(months_postdoc),digits = 1), min_time=min(months_postdoc), max_time=max(months_postdoc), num_data=n()) %>% mutate(specifics="All specifics"))
+dfTimeSpecYrs <- bind_rows(dfTimeSpecYrs, dataGroup %>% group_by(years) %>% summarise(avg_time=round(mean(months_postdoc,na.rm=TRUE),digits = 1), min_time=min(months_postdoc,na.rm=TRUE), max_time=max(months_postdoc,na.rm=TRUE), num_data=n()) %>% mutate(specifics="All specifics"))
 
 
 # average time in NIEHS by degree field
-dfTimeDegrAll <- dataGroup %>% group_by(degree_category) %>% summarise(avg_time=round(mean(months_postdoc),digits = 1), min_time=min(months_postdoc), max_time=max(months_postdoc), num_data=n())
+dfTimeDegrAll <- dataGroup %>% group_by(degree_category) %>% summarise(avg_time=round(mean(months_postdoc,na.rm=TRUE),digits = 1), min_time=min(months_postdoc,na.rm=TRUE), max_time=max(months_postdoc,na.rm=TRUE), num_data=n())
 dfTimeDegrAll$degree_category <- as.character(dfTimeDegrAll$degree_category)
-dfTimeDegrAll <- bind_rows(dfTimeDegrAll, dataGroup %>% summarise(avg_time=round(mean(months_postdoc),digits = 1), min_time=min(months_postdoc), max_time=max(months_postdoc), num_data=n()) %>% mutate(degree_category="All degree"))
-dfTimeDegrYrs <- dataGroup %>% group_by(years, degree_category) %>% summarise(avg_time=round(mean(months_postdoc),digits = 1), min_time=min(months_postdoc), max_time=max(months_postdoc), num_data=n())
+dfTimeDegrAll <- bind_rows(dfTimeDegrAll, dataGroup %>% summarise(avg_time=round(mean(months_postdoc,na.rm=TRUE),digits = 1), min_time=min(months_postdoc,na.rm=TRUE), max_time=max(months_postdoc,na.rm=TRUE), num_data=n()) %>% mutate(degree_category="All degree"))
+dfTimeDegrYrs <- dataGroup %>% group_by(years, degree_category) %>% summarise(avg_time=round(mean(months_postdoc,na.rm=TRUE),digits = 1), min_time=min(months_postdoc,na.rm=TRUE), max_time=max(months_postdoc,na.rm=TRUE), num_data=n())
 dfTimeDegrYrs$degree_category <- as.character(dfTimeDegrYrs$degree_category)
-dfTimeDegrYrs <- bind_rows(dfTimeDegrYrs, dataGroup %>% group_by(years) %>% summarise(avg_time=round(mean(months_postdoc),digits = 1), min_time=min(months_postdoc), max_time=max(months_postdoc), num_data=n()) %>% mutate(degree_category="All degree"))
+dfTimeDegrYrs <- bind_rows(dfTimeDegrYrs, dataGroup %>% group_by(years) %>% summarise(avg_time=round(mean(months_postdoc,na.rm=TRUE),digits = 1), min_time=min(months_postdoc,na.rm=TRUE), max_time=max(months_postdoc,na.rm=TRUE), num_data=n()) %>% mutate(degree_category="All degree"))
 
 
 # training time by gender and country
-gendTimeAll <- dataGroup %>% group_by(gender) %>% summarise(avg_time=round(mean(months_postdoc),digits = 1), min_time=min(months_postdoc), max_time=max(months_postdoc), num_data=n())
-# gendTimeAll$years <- '2000-2014'
-gendTimeGrp <- dataGroup %>% group_by(years, gender) %>% summarise(avg_time=round(mean(months_postdoc),digits = 1), min_time=min(months_postdoc), max_time=max(months_postdoc), num_data=n())
-gendTimeCtryAll <- mgrCountry %>% group_by(country_origin,gender) %>% summarise(avg_time=round(mean(months_postdoc),digits = 1), min_time=min(months_postdoc), max_time=max(months_postdoc), num_data=n())
+gendTimeAll <- dataGroup %>% group_by(gender) %>% summarise(avg_time=round(mean(months_postdoc,na.rm=TRUE),digits = 1), min_time=min(months_postdoc,na.rm=TRUE), max_time=max(months_postdoc,na.rm=TRUE), num_data=n())
+gendTimeGrp <- dataGroup %>% group_by(years, gender) %>% summarise(avg_time=round(mean(months_postdoc,na.rm=TRUE),digits = 1), min_time=min(months_postdoc,na.rm=TRUE), max_time=max(months_postdoc,na.rm=TRUE), num_data=n())
+gendTimeCtryAll <- mgrCountry %>% group_by(country_origin,gender) %>% summarise(avg_time=round(mean(months_postdoc,na.rm=TRUE),digits = 1), min_time=min(months_postdoc,na.rm=TRUE), max_time=max(months_postdoc,na.rm=TRUE), num_data=n())
 
 
 # count the degree_category vs job_sector, job_type, specifics

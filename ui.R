@@ -1,7 +1,8 @@
 ## ui.R ##
 
 header <- dashboardHeader(
-  title = paste0(nameInstitute, " Postdocs")
+  title = paste0(nameInstitute, " Alumni Career Outcomes"),
+  titleWidth = 320
 )
 
 # https://stackoverflow.com/questions/31440564/adding-a-company-logo-to-shinydashboard-header
@@ -22,18 +23,15 @@ side <- dashboardSidebar(
     menuItem("Training time", tabName = "time", icon = icon("hourglass")),
     menuItem("Top 5 countries", tabName = "country", icon = icon("star")),
     menuItem("Doctoral degrees", tabName = "degree", icon = icon("graduation-cap")),
-    # menuItem("Raw data", tabName = "rawdata", icon = icon("download")),
+    menuItem("Trends", tabName = "trends", icon = icon("chart-line")),
     # demograph conditionalPanel input
     conditionalPanel(
       condition = "input.tabs == 'demograph'",
       div(HTML("<strong>Select Inputs:</strong>"), style = "color:black;background-color:white;",
         # select time period
         selectInput("selectDmTp", label = "Choose time period to view", width="230px",
-                    choices = c('Left NIEHS in 2000-2014',
-                                'Left NIEHS in 2000-2004',
-                                'Left NIEHS in 2005-2009',
-                                'Left NIEHS in 2010-2014')),
-        #           choices = c(timePeriods,"Total","Trend")),
+                    choices = choiceYrs),
+
         # select plot style
         selectInput("selectDmPc", label = "Plot category", width="230px",
                     choices = list("By job sector"=1, "By job type"=2, 
@@ -46,10 +44,7 @@ side <- dashboardSidebar(
       div(HTML("<strong>Select Input:</strong>"), style = "color:black;background-color:white;",
         # select time period
         selectInput("selectLcTp", label = "Choose time period to view", width="230px",
-                    choices = c('Left NIEHS in 2000-2014',
-                                'Left NIEHS in 2000-2004',
-                                'Left NIEHS in 2005-2009',
-                                'Left NIEHS in 2010-2014'))
+                    choices = choiceYrs)
       )
     ),
     # general job conditionalPanel input
@@ -58,12 +53,8 @@ side <- dashboardSidebar(
       div(HTML("<strong>Select Input:</strong>"), style = "color:black;background-color:white;",
           # select time period
           selectInput("selectGnrTp", label = "Choose time period to view", width="230px",
-                      choices = c('Left NIEHS in 2000-2014',
-                                  'Left NIEHS in 2000-2004',
-                                  'Left NIEHS in 2005-2009',
-                                  'Left NIEHS in 2010-2014'))
-          #            choices = c(timePeriods,"Total","Trend"))
-          
+                      choices = choiceYrs)
+
       )
     ),
     # general job conditionalPanel input
@@ -72,10 +63,7 @@ side <- dashboardSidebar(
       div(HTML("<strong>Select Input:</strong>"), style = "color:black;background-color:white;",
           # select time period
           selectInput("selectRlnTp", label = "Choose time period to view", width="230px",
-                      choices = c('Left NIEHS in 2000-2014',
-                                  'Left NIEHS in 2000-2004',
-                                  'Left NIEHS in 2005-2009',
-                                  'Left NIEHS in 2010-2014'))
+                      choices = choiceYrs)
       )
     ),
     # highlight conditionalPanel input
@@ -84,10 +72,7 @@ side <- dashboardSidebar(
       div(HTML("<strong>Select Input:</strong>"), style = "color:black;background-color:white;",
           # select time period
           selectInput("selectHlTp", label = "Choose time period to view", width="230px",
-                      choices = c('Left NIEHS in 2000-2014',
-                                  'Left NIEHS in 2000-2004',
-                                  'Left NIEHS in 2005-2009',
-                                  'Left NIEHS in 2010-2014'))
+                      choices = choiceYrs)
       )
     ),
     # training time conditionalPanel input
@@ -96,11 +81,8 @@ side <- dashboardSidebar(
       div(HTML("<strong>Select Input:</strong>"), style = "color:black;background-color:white;",
           # select time period
           selectInput("selectTmTp", label = "Choose time period to view", width="230px",
-                      choices = c('Left NIEHS in 2000-2014',
-                                  'Left NIEHS in 2000-2004',
-                                  'Left NIEHS in 2005-2009',
-                                  'Left NIEHS in 2010-2014'))
-          #             choices = c(timePeriods,"Total","Trend"))
+                      choices = choiceYrs)
+
       )
     ),
     # top countries conditionalPanel input
@@ -109,10 +91,7 @@ side <- dashboardSidebar(
       div(HTML("<strong>Select Inputs:</strong>"), style = "color:black;background-color:white;",
           # select time period
           selectInput("selectCtTp", label = "Choose time period to view", width="230px",
-                      choices = c('Left NIEHS in 2000-2014',
-                                  'Left NIEHS in 2000-2004',
-                                  'Left NIEHS in 2005-2009',
-                                  'Left NIEHS in 2010-2014')),
+                      choices = choiceYrs),
           # select plot style
           selectInput("selectCtPc", label = "Plot category", width="230px",
                       choices = list("By job sector"=1, "By job type"=2, 
@@ -125,10 +104,18 @@ side <- dashboardSidebar(
       div(HTML("<strong>Select Inputs:</strong>"), style = "color:black;background-color:white;",
           # select time period
           selectInput("selectDgTp", label = "Choose time period to view", width="230px",
-                      choices = c('Left NIEHS in 2000-2014',
-                                  'Left NIEHS in 2000-2004',
-                                  'Left NIEHS in 2005-2009',
-                                  'Left NIEHS in 2010-2014'))
+                      choices = choiceYrs)
+      )
+    ),
+    # trend conditionalPanel input
+    conditionalPanel(
+      condition = "input.tabs == 'trends'",
+      div(HTML("<strong>Select Inputs:</strong>"), style = "color:black;background-color:white;",
+          # select plot style
+          selectInput("selectTdPc", label = "Trends in data", width="230px",
+                      choices = list("Demographics"=1, "Job location"=2, 
+                                     "Career distribution"=3, "Highlights"=4,
+                                     "Training time"=5), selected = 1)
       )
     )
   )
@@ -169,9 +156,9 @@ body <- dashboardBody(
     tabItem("taxonomy",
       fluidRow(
         column(12, align="right",
-               actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
-                            onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
-               HTML("<p></p>")
+          actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
+                       onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'"),
+          HTML("<p></p>")
         )
       ),
       fluidRow(
@@ -206,16 +193,16 @@ body <- dashboardBody(
     tabItem("demograph",
       fluidRow(
         column(12, align="right",
-               actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
-                            onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
-               HTML("<p></p>")
+          actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
+                       onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'"),
+          HTML("<p></p>")
         )
       ),
       fluidRow(
         box(
           title = "ALUMNI DEMOGRAPHICS", width = 12, solidHeader = TRUE,
-          paste0("From ", minYrs, " to ", maxYrs, ", ", tMalePct, " percent of alumni are male, the rest are female. ", 
-                tCitizenPct, " percent of alumni are US fellows, the rest are international fellows.")
+          paste0("From ", minYrs, " to ", maxYrs, ", ", tMalePct, "% of alumni are male, the rest are female. ", 
+                tCitizenPct, "% alumni are US fellows, the rest are international fellows.")
         )
       ),
       fluidRow(
@@ -240,13 +227,13 @@ body <- dashboardBody(
     
     
     tabItem("location",
-      fluidRow(
-        column(12, align="right",
-               actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
-                            onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
-               HTML("<p></p>")
-        )
-      ),
+            fluidRow(
+              column(12, align="right",
+                     actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
+                                  onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'"),
+                     HTML("<p></p>")
+              )
+            ),
       fluidRow(
         box(
           title = "JOB LOCATION", width = 12, solidHeader = TRUE,
@@ -277,17 +264,17 @@ body <- dashboardBody(
     
     
     tabItem("general",
-      fluidRow(
-        column(12, align="right",
-               actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
-                            onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
-               HTML("<p></p>")
-        )
-      ),
+            fluidRow(
+              column(12, align="right",
+                     actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
+                                  onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'"),
+                     HTML("<p></p>")
+              )
+            ),
       fluidRow(
         box(title = "GENERAL CAREER OUTCOMES", width = 12, solidHeader = TRUE,
-            paste0("From 2000 to 2014, a large pecentage ", max(tGnrSectorPct), "% of alumni are employed in '", names(which(tGnrSectorPct==max(tGnrSectorPct))), "' Job Sector. ",
-                   "More alumni ", max(tGnrTypePct), "% work as '", names(which(tGnrTypePct==max(tGnrTypePct))), "' than any other Job Type. ",
+            paste0("From 2000 to 2019, a large pecentage (", max(tGnrSectorPct), "%) of alumni are employed in the '", names(which(tGnrSectorPct==max(tGnrSectorPct))), "' Job Sector. ",
+                   "More alumni (", max(tGnrTypePct), "%) work as '", names(which(tGnrTypePct==max(tGnrTypePct))), "' than any other Job Type. ",
                    "The top Job Specifics is '", names(which(tGnrSpecPct==max(tGnrSpecPct))), "', with ", max(tGnrSpecPct), "% of alumni.")
         )
       ),
@@ -312,13 +299,13 @@ body <- dashboardBody(
     ),
 
     tabItem("relation",
-      fluidRow(
-        column(12, align="right",
-               actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
-                            onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
-               HTML("<p></p>")
-        )
-      ),
+            fluidRow(
+              column(12, align="right",
+                     actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
+                                  onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'"),
+                     HTML("<p></p>")
+              )
+            ),
       fluidRow(
         box(title = "RELATIONSHIP BETWEEN JOB SECTORS, JOB TYPES AND JOB SPECIFICS", width = 12, solidHeader = TRUE,
             HTML("The width of the lines is proportional to the relative quantity of scholars within each group. 
@@ -344,13 +331,13 @@ body <- dashboardBody(
 
     
     tabItem("highlight",
-      fluidRow(
-        column(12, align="right",
-               actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
-                            onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
-               HTML("<p></p>")
-        )
-      ),
+            fluidRow(
+              column(12, align="right",
+                     actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
+                                  onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'"),
+                     HTML("<p></p>")
+              )
+            ),
       fluidRow(
         box(title = "CAREER OUTCOME HIGHLIGHTS", width = 12, solidHeader = TRUE,
             "In job sub-groups, there are big differences between international fellows and US fellows.")
@@ -374,13 +361,13 @@ body <- dashboardBody(
     
     
     tabItem("time",
-      fluidRow(
-        column(12, align="right",
-               actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
-                            onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
-               HTML("<p></p>")
-        )
-      ),
+            fluidRow(
+              column(12, align="right",
+                     actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
+                                  onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'"),
+                     HTML("<p></p>")
+              )
+            ),
       fluidRow(
         box(title = "TRAINING TIME", width = 12, solidHeader = TRUE,
             paste0("The overall average time spent at NIEHS was ", cntAvgTime, 
@@ -401,7 +388,7 @@ body <- dashboardBody(
             sliderInput("sldWidthTm", "Plot Width (px)", min = 0, max = 1200, value = 500)
           ),
           column(4, align="center",
-            sliderInput("sldHeightTm", "Plot Height (px)", min = 0, max = 1200, value = 500)
+            sliderInput("sldHeightTm", "Plot Height (px)", min = 0, max = 1200, value = 400)
           )
         ),
         uiOutput("tmDynamicUI")
@@ -410,13 +397,13 @@ body <- dashboardBody(
     
     
     tabItem("country",
-      fluidRow(
-        column(12, align="right",
-               actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
-                            onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
-               HTML("<p></p>")
-        )
-      ),
+            fluidRow(
+              column(12, align="right",
+                     actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
+                                  onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'"),
+                     HTML("<p></p>")
+              )
+            ),
       fluidRow(
         box(
           title = "COMPARISON OF FELLOWS BASED ON THEIR COUNTRY OF ORIGIN", width = 12, solidHeader = TRUE,
@@ -448,20 +435,20 @@ body <- dashboardBody(
 
     
     tabItem("degree",
-      fluidRow(
-        column(12, align="right",
-               actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
-                            onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm';"),
-               HTML("<p></p>")
-        )
-      ),
+            fluidRow(
+              column(12, align="right",
+                     actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
+                                  onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'"),
+                     HTML("<p></p>")
+              )
+            ),
       fluidRow(
         box(
           title = "DOCTORAL DEGREE FIELD OF STUDY", width = 12, solidHeader = TRUE,
           HTML("We also find career outcome differences between individuals in different fields of study.  
                In the graphs below, we used a threshold of N>10 in order for a field of study to be displayed in the
-                 'total' year graph (2000-2014).  We used a threshold of N>5 in order for a field of study to be displayed in the '5-year 
-                 period' graphs (ex:  2000-2004, 2005-2009, or 2010-2014).  The 95% <a href='https://en.wikipedia.org/wiki/Confidence_interval'>confidence intervals</a> of the binomial proportion are 
+                 'total' year graph (2000-2019).  We used a threshold of N>5 in order for a field of study to be displayed in the '5-year 
+                 period' graphs (ex:  2000-2004, 2005-2009, 2010-2014, or 2015-2019).  The 95% <a href='https://en.wikipedia.org/wiki/Confidence_interval'>confidence intervals</a> of the binomial proportion are 
                  shown.")
         )
       ),
@@ -485,7 +472,34 @@ body <- dashboardBody(
       )
     ),
     
-    
+    tabItem("trends",
+            fluidRow(
+              column(12, align="right",
+                     actionButton(inputId = "goHome", label = "Return to NIEHS Career Website", class="pre_anchor",
+                                  onclick ="javascript:parent.window.location.href='https://www.niehs.nih.gov/careers/research/fellows/index.cfm'"),
+                     HTML("<p></p>")
+              )
+            ),
+      fluidRow(
+        uiOutput("trendTitleBox")
+      ),
+      # fluidRow(
+      #   uiOutput("trendInfoBox")
+      # ),
+      div(id = "TrdPlot", style="background-color:#d4e3fc;",
+        fluidRow(
+          uiOutput("trendControlUI"),
+          column(4, align="center",
+                 sliderInput("sldWidthTd", "Plot Width (px)", min = 0, max = 1200, value = 500)
+          ),
+          column(4, align="center",
+                 sliderInput("sldHeightTd", "Plot Height (px)", min = 0, max = 1200, value = 400)
+          )
+        ),
+        uiOutput("trendDynamicUI")
+      )
+    ),
+
     #####
     # tabItem("rawdata",
     #   "Only the top 25 rows are shown here. But the download contains whole data.",
@@ -512,6 +526,3 @@ dashboardPage(
 # debug shiny app:
 #   https://shiny.rstudio.com/articles/debugging.html
 #   https://stackoverflow.com/questions/31920286/effectively-debugging-shiny-apps
-
-# redirect URLs
-#   https://stackoverflow.com/questions/9247067/when-someone-clicks-a-link-in-an-iframe-navigate-the-entire-window
