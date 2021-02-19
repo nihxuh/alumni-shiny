@@ -1,7 +1,7 @@
-## server.R ## 
+## server.R ##
 function(input, output, session) {
   # set ggplot2 default font size to 12
-  ggplot2::theme_set(theme_classic(base_size = 14)) 
+  ggplot2::theme_set(theme_classic(base_size = 12))
 
   # wrap string
   wrap_strings <- function(vector_of_strings,width) {
@@ -21,11 +21,13 @@ function(input, output, session) {
     dfTime <- data.frame("key" = c('Left NIEHS in 2000-2004',
                                    'Left NIEHS in 2005-2009',
                                    'Left NIEHS in 2010-2014',
-                                   'Left NIEHS in 2000-2014'), 
+                                   'Left NIEHS in 2015-2019',
+                                   'Whole time (2000-2019)'), 
                          "value" = c('2000-2004',
                                      '2005-2009',
                                      '2010-2014',
-                                     '2000-2014'))
+                                     '2015-2019',
+                                     '2000-2019'))
     result <- as.character(dfTime$value[dfTime$key == disp_time])
     return(result)
   }
@@ -46,7 +48,7 @@ function(input, output, session) {
   output$years <- renderValueBox({
     valueBox(
       value = totalYrs,
-      subtitle = "Postdocs became alumni in this time span",
+      subtitle = "Time span",
       icon = icon("calendar")
     )
   })
@@ -64,7 +66,7 @@ function(input, output, session) {
   output$coverage <- renderValueBox({
     valueBox(
       value = covRate,
-      subtitle = "Alumni with known outcome snapshots",
+      subtitle = "Alumni with known outcomes",
       icon = icon("pie-chart"),
       color = "yellow"
     )
@@ -145,8 +147,21 @@ function(input, output, session) {
     # convert data format for likert data
     pctAll <- round(dataAll/rowSums(dataAll)*100,2)
     pctCat <- round(dataCat[-1]/rowSums(dataCat[-1])*100,2)
-    ldAll <- data.frame(Item = c(' '), pctAll)
-    ldCat <- data.frame(dataCat[,1], pctCat)
+    # ldAll <- data.frame(Item = c(' '), pctAll)
+    # ldCat <- data.frame(dataCat[,1], pctCat)
+    # (10/4/2019): hack for summary error -
+    #   "Error in data.frame(Item = results[, 1], low = low, neutral = neutral,  : 
+    #     object 'neutral' not found"
+    #   Add .=0 as artificial neutral field
+    if (inType == 'Gender') {
+      ldAll <- data.frame(Item = c(' '), Female=pctAll$Female, .=0, Male=pctAll$Male)
+      ldCat <- data.frame(dataCat[,1], Female=pctCat$Female, .=0, Male=pctCat$Male)
+    }
+    else {
+      ldAll <- data.frame(Item = c(' '), International=pctAll$International, .=0, US=pctAll$US)
+      ldCat <- data.frame(dataCat[,1], International=pctCat$International, .=0, US=pctCat$US)
+    }
+    
     colnames(ldCat)[1] <- "Item"
     dcAll = data.frame(Item = ' ', Count = rowSums(dataAll))
     dcCat = data.frame(ldCat[,1], data.frame(rowSums(dataCat[-1])))
@@ -155,13 +170,11 @@ function(input, output, session) {
     
     # likert plot
     ltAll <- likert(summary=ldAll)
-    # p1 <- plot(ltAll, colors=inColors, text.size=4) + ggtitle(titleAll) + theme(plot.title = element_text(hjust = 0.5), axis.text=element_text(size=12,face="bold"))
-    p1 <- plot(ltAll, colors=inColors) + ggtitle(titleAll) + theme(plot.title = element_text(hjust = 0.5), axis.text=element_text(size=12,face="bold"))
+    p1 <- plot(ltAll, colors=inColors, text.size=3) + ggtitle(titleAll) + theme(plot.title = element_text(hjust = 0.5), axis.text=element_text(size=12,face="bold"))
     p1 <- p1 + guides(fill=guide_legend(title=inType)) + geom_label(data=dcAll, aes(x=Item, y = 1, label=Count))
           # annotate("text", x=dcAll$Item, y = 1, label=dcAll$Count, colour = "#e6e600", fontface =2)
     ltCat <- likert(summary=ldCat)
-    # p2 <- plot(ltCat, colors=inColors, ordered = FALSE, text.size=4) + ggtitle(titleCat) + theme(plot.title = element_text(hjust = 0.5), axis.text=element_text(size=12,face="bold"))
-    p2 <- plot(ltCat, colors=inColors, ordered = FALSE) + ggtitle(titleCat) + theme(plot.title = element_text(hjust = 0.5), axis.text=element_text(size=12,face="bold"))
+    p2 <- plot(ltCat, colors=inColors, ordered = FALSE, text.size=3) + ggtitle(titleCat) + theme(plot.title = element_text(hjust = 0.5), axis.text=element_text(size=12,face="bold"))
     p2 <- p2 + guides(fill=guide_legend(title=inType)) + geom_label(data=dcCat, aes(x=Item, y = 1, label=Count))
           # annotate("text", x=dcCat$Item, y = 1, label=dcCat$Count, colour = "#e6e600", fontface =2)
     
@@ -170,26 +183,28 @@ function(input, output, session) {
   
   # gender colors
   genderColors = c("#D81B60", "#4F94CD")
+  # (10/4/2019): hack for summary error -
+  genderColors_likert = c("#D81B60", "#FFFFFF", "#4F94CD")
   
   # plot gender data
   output$genderLtPlot <- renderPlot({
     # choose data based on input$selectDmTp from ui.R
-    if (input$selectDmTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectDmTp == 'Whole time (2000-2019)') {
       # change for Likert plot (3/15/18)
       if (input$selectDmPc == 1) {
         titleAll = paste0("Gender distribution in all data \n", totalYrs)
         titleCat = paste0("Gender distribution in each job sector \n", totalYrs)
-        likertHelper(gend4All, gend4Sect, 'Gender', titleAll, titleCat, genderColors)
+        likertHelper(gend4All, gend4Sect, 'Gender', titleAll, titleCat, genderColors_likert)
       }
       else if (input$selectDmPc == 2) {
         titleAll = paste0("Gender distribution in all data \n", totalYrs)
         titleCat = paste0("Gender distribution in each job type \n", totalYrs)
-        likertHelper(gend4All, gend4Type, 'Gender', titleAll, titleCat, genderColors)
+        likertHelper(gend4All, gend4Type, 'Gender', titleAll, titleCat, genderColors_likert)
       }
       else {
         titleAll = paste0("Gender distribution in all data \n", totalYrs)
         titleCat = paste0("Gender distribution in each job specifics \n", totalYrs)
-        likertHelper(gend4All, gend4Spec, 'Gender', titleAll, titleCat, genderColors)
+        likertHelper(gend4All, gend4Spec, 'Gender', titleAll, titleCat, genderColors_likert)
       }
     }
     else if (input$selectDmTp == 'Trend') {
@@ -224,17 +239,17 @@ function(input, output, session) {
       if (input$selectDmPc == 1) {
         titleAll = paste0("Gender distribution in all data \n", selectYears)
         titleCat = paste0("Gender distribution in each job sector \n", selectYears)
-        likertHelper(pltGndAll, pltGndSec, 'Gender', titleAll, titleCat, genderColors)
+        likertHelper(pltGndAll, pltGndSec, 'Gender', titleAll, titleCat, genderColors_likert)
       }
       else if (input$selectDmPc == 2) {
         titleAll = paste0("Gender distribution in all data \n", selectYears)
         titleCat = paste0("Gender distribution in each job type \n", selectYears)
-        likertHelper(pltGndAll, pltGndTyp, 'Gender', titleAll, titleCat, genderColors)
+        likertHelper(pltGndAll, pltGndTyp, 'Gender', titleAll, titleCat, genderColors_likert)
       }
       else {
         titleAll = paste0("Gender distribution in all data \n", selectYears)
         titleCat = paste0("Gender distribution in each job specifics \n", selectYears)
-        likertHelper(pltGndAll, pltGndSpe, 'Gender', titleAll, titleCat, genderColors)
+        likertHelper(pltGndAll, pltGndSpe, 'Gender', titleAll, titleCat, genderColors_likert)
       }
     }
   },height=dmHeight,width=dmWidth)
@@ -244,17 +259,17 @@ function(input, output, session) {
 
   output$genderPbPlot <- renderPlot({
     # choose data based on input$selectDmTp from ui.R
-    if (input$selectDmTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectDmTp == 'Whole time (2000-2019)') {
       if (input$selectDmPc == 1) {
-        gend4Sect.m <- melt(gend4Sect, id.vars = "job_sector")
-        colnames(gend4Sect.m)[colnames(gend4Sect.m)=="variable"] <- "gender"
+        gend4Sect.m <- tidyr::gather(gend4Sect, key, value, -job_sector)
+        colnames(gend4Sect.m)[colnames(gend4Sect.m)=="key"] <- "gender"
         p <- ggplot(gend4Sect.m, aes(job_sector, value)) + labs(x="Job Sector", y="Number of Alumni") + guides(fill=guide_legend(title="Gender"))
         p <- p + geom_bar(aes(fill = gender), position = "dodge", stat="identity")
         p <- p + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + scale_fill_manual(values=genderColors)
       }
       else if (input$selectDmPc == 2) {
-        gend4Type.m <- melt(gend4Type, id.vars = "job_type")
-        colnames(gend4Type.m)[colnames(gend4Type.m)=="variable"] <- "gender"
+        gend4Type.m <- tidyr::gather(gend4Type, key, value, -job_type)
+        colnames(gend4Type.m)[colnames(gend4Type.m)=="key"] <- "gender"
         p <- ggplot(gend4Type.m, aes(job_type, value)) + labs(x="Job Type", y="Number of Alumni") + guides(fill=guide_legend(title="Gender"))
         p <- p + geom_bar(aes(fill = gender), position = "dodge", stat="identity")
         p <- p + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + scale_fill_manual(values=genderColors)
@@ -262,8 +277,8 @@ function(input, output, session) {
       else {
         # gdr4Spec <- gend4Spec[grepl('research', gend4Spec$specifics),]
         gdr4Spec <- gend4Spec
-        gend4Spec.m <- melt(gdr4Spec, id.vars = "specifics")
-        colnames(gend4Spec.m)[colnames(gend4Spec.m)=="variable"] <- "gender"
+        gend4Spec.m <- tidyr::gather(gdr4Spec, key, value, -specifics)
+        colnames(gend4Spec.m)[colnames(gend4Spec.m)=="key"] <- "gender"
         p <- ggplot(gend4Spec.m, aes(specifics, value)) + labs(x="Job Specifics", y="Number of Alumni") + guides(fill=guide_legend(title="Gender"))
         p <- p + geom_bar(aes(fill = gender), position = "dodge", stat="identity")
         p <- p + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + scale_fill_manual(values=genderColors)
@@ -271,22 +286,22 @@ function(input, output, session) {
     }
     else if (input$selectDmTp == 'Trend') {
       if (input$selectDmPc == 1) {
-        gdrYrSect.m <- melt(gendYrSect, id.vars = c("job_sector","years"))
-        colnames(gdrYrSect.m)[colnames(gdrYrSect.m)=="variable"] <- "gender"
+        gdrYrSect.m <- tidyr::gather(gendYrSect, key, value, -job_sector, -years)
+        colnames(gdrYrSect.m)[colnames(gdrYrSect.m)=="key"] <- "gender"
         p <- ggplot(gdrYrSect.m, aes(job_sector, value)) + labs(x="Job Sector", y="Number of Alumni") + guides(fill=guide_legend(title="Gender"))
         p <- p + geom_bar(aes(fill = gender), position = "dodge", stat="identity")
         p <- p + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + facet_grid( ~ years) + scale_fill_manual(values=genderColors)
       }
       else if (input$selectDmPc == 2) {
-        gdrYrType.m <- melt(gendYrType, id.vars = c("job_type","years"))
-        colnames(gdrYrType.m)[colnames(gdrYrType.m)=="variable"] <- "gender"
+        gdrYrType.m <- tidyr::gather(gendYrType, key, value, -job_type, -years)
+        colnames(gdrYrType.m)[colnames(gdrYrType.m)=="key"] <- "gender"
         p <- ggplot(gdrYrType.m, aes(job_type, value)) + labs(x="Job Type", y="Number of Alumni") + guides(fill=guide_legend(title="Gender"))
         p <- p + geom_bar(aes(fill = gender), position = "dodge", stat="identity")
         p <- p + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + facet_grid( ~ years) + scale_fill_manual(values=genderColors)
       }
       else {
-        gdrYrSpec.m <- melt(gendYrSpec, id.vars = c("specifics","years"))
-        colnames(gdrYrSpec.m)[colnames(gdrYrSpec.m)=="variable"] <- "gender"
+        gdrYrSpec.m <- tidyr::gather(gendYrSpec, key, value, -specifics, -years)
+        colnames(gdrYrSpec.m)[colnames(gdrYrSpec.m)=="key"] <- "gender"
         p <- ggplot(gdrYrSpec.m, aes(specifics, value)) + labs(x="Job Specifics", y="Number of Alumni") + guides(fill=guide_legend(title="Gender"))
         p <- p + geom_bar(aes(fill = gender), position = "dodge", stat="identity")
         p <- p + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + facet_grid( ~ years) + scale_fill_manual(values=genderColors)
@@ -301,22 +316,22 @@ function(input, output, session) {
       
       # plot
       if (input$selectDmPc == 1) {
-        gdrPlSect.m <- melt(pltGndSec, id.vars = c("job_sector","years"))
-        colnames(gdrPlSect.m)[colnames(gdrPlSect.m)=="variable"] <- "gender"
+        gdrPlSect.m <- tidyr::gather(pltGndSec, key, value, -job_sector, -years)
+        colnames(gdrPlSect.m)[colnames(gdrPlSect.m)=="key"] <- "gender"
         p <- ggplot(gdrPlSect.m, aes(job_sector, value)) + labs(x="Job Sector", y="Number of Alumni") + guides(fill=guide_legend(title="Gender"))
         p <- p + geom_bar(aes(fill = gender), position = "dodge", stat="identity")
         p <- p + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + scale_fill_manual(values=genderColors)
       }
       else if (input$selectDmPc == 2) {
-        gdrPlType.m <- melt(pltGndTyp, id.vars = c("job_type","years"))
-        colnames(gdrPlType.m)[colnames(gdrPlType.m)=="variable"] <- "gender"
+        gdrPlType.m <- tidyr::gather(pltGndTyp, key, value, -job_type, -years)
+        colnames(gdrPlType.m)[colnames(gdrPlType.m)=="key"] <- "gender"
         p <- ggplot(gdrPlType.m, aes(job_type, value)) + labs(x="Job Type", y="Number of Alumni") + guides(fill=guide_legend(title="Gender"))
         p <- p + geom_bar(aes(fill = gender), position = "dodge", stat="identity")
         p <- p + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + scale_fill_manual(values=genderColors)
       }
       else {
-        gdrPlSpec.m <- melt(pltGndSpe, id.vars = c("specifics","years"))
-        colnames(gdrPlSpec.m)[colnames(gdrPlSpec.m)=="variable"] <- "gender"
+        gdrPlSpec.m <- tidyr::gather(pltGndSpe, key, value, -specifics, -years)
+        colnames(gdrPlSpec.m)[colnames(gdrPlSpec.m)=="key"] <- "gender"
         p <- ggplot(gdrPlSpec.m, aes(specifics, value)) + labs(x="Job Specifics", y="Number of Alumni") + guides(fill=guide_legend(title="Gender"))
         p <- p + geom_bar(aes(fill = gender), position = "dodge", stat="identity")
         p <- p + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + scale_fill_manual(values=genderColors)
@@ -329,7 +344,7 @@ function(input, output, session) {
   # output gender table
   output$genderTable <- renderTable({
     # choose data based on input$selectGt from ui.R
-    if (input$selectDmTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectDmTp == 'Whole time (2000-2019)') {
       if (input$selectDmPc == 1) {
         changeTableHeader(gend4Sect, c('Job_Sector','Female','Male'))
       }
@@ -372,25 +387,27 @@ function(input, output, session) {
   # plot citizenship data
   # visiting colors
   visitColors = c("#47427e","#6cc06d")
+  # (10/4/2019): hack for summary error -
+  visitColors_likert = c("#47427e","#FFFFFF","#6cc06d")
   
   output$visitLtPlot <- renderPlot({
     # choose data based on input$selectDmTp from ui.R
-    if (input$selectDmTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectDmTp == 'Whole time (2000-2019)') {
       # change for Likert plot (3/15/18)
       if (input$selectDmPc == 1) {
         titleAll = paste0("Country origin distribution in all data \n", totalYrs)
         titleCat = paste0("Country origin distribution in each job sector \n", totalYrs)
-        likertHelper(citi4All, citi4Sect, 'Country', titleAll, titleCat, visitColors)
+        likertHelper(citi4All, citi4Sect, 'Country', titleAll, titleCat, visitColors_likert)
       }
       else if (input$selectDmPc == 2) {
         titleAll = paste0("Country origin distribution in all data \n", totalYrs)
         titleCat = paste0("Country origin distribution in each job type \n", totalYrs)
-        likertHelper(citi4All, citi4Type, 'Country', titleAll, titleCat, visitColors)
+        likertHelper(citi4All, citi4Type, 'Country', titleAll, titleCat, visitColors_likert)
       }
       else {
         titleAll = paste0("Country origin distribution in all data \n", totalYrs)
         titleCat = paste0("Country origin distribution in each job specifics \n", totalYrs)
-        likertHelper(citi4All, citi4Spec, 'Country', titleAll, titleCat, visitColors)
+        likertHelper(citi4All, citi4Spec, 'Country', titleAll, titleCat, visitColors_likert)
       }
     }
     else if (input$selectDmTp == 'Trend') {
@@ -425,17 +442,17 @@ function(input, output, session) {
       if (input$selectDmPc == 1) {
         titleAll = paste0("Country origin distribution in all data \n", selectYears)
         titleCat = paste0("Country origin distribution in each job sector \n", selectYears)
-        likertHelper(pltCtzAll, pltCtzSec, 'Country', titleAll, titleCat, visitColors)
+        likertHelper(pltCtzAll, pltCtzSec, 'Country', titleAll, titleCat, visitColors_likert)
       }
       else if (input$selectDmPc == 2) {
         titleAll = paste0("Country origin distribution in all data \n", selectYears)
         titleCat = paste0("Country origin distribution in each job type \n", selectYears)
-        likertHelper(pltCtzAll, pltCtzTyp, 'Country', titleAll, titleCat, visitColors)
+        likertHelper(pltCtzAll, pltCtzTyp, 'Country', titleAll, titleCat, visitColors_likert)
       }
       else {
         titleAll = paste0("Country origin distribution in all data \n", selectYears)
         titleCat = paste0("Country origin distribution in each job specifics \n", selectYears)
-        likertHelper(pltCtzAll, pltCtzSpe, 'Country', titleAll, titleCat, visitColors)
+        likertHelper(pltCtzAll, pltCtzSpe, 'Country', titleAll, titleCat, visitColors_likert)
       }
     }
   },height=dmHeight,width=dmWidth)
@@ -445,24 +462,24 @@ function(input, output, session) {
   
   output$visitPbPlot <- renderPlot({
     # choose data based on input$selectDmTp from ui.R
-    if (input$selectDmTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectDmTp == 'Whole time (2000-2019)') {
       if (input$selectDmPc == 1) {
-          citi4Sect.m <- melt(citi4Sect, id.vars = "job_sector")
-          colnames(citi4Sect.m)[colnames(citi4Sect.m)=="variable"] <- "visiting"
+          citi4Sect.m <- tidyr::gather(citi4Sect, key, value, -job_sector)
+          colnames(citi4Sect.m)[colnames(citi4Sect.m)=="key"] <- "visiting"
           p <- ggplot(citi4Sect.m, aes(job_sector, value)) + labs(x="Job Sector", y="Number of Alumni") + guides(fill=guide_legend(title="Country\n origin"))
           p <- p + geom_bar(aes(fill = visiting), position = "dodge", stat="identity")
           p <- p + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + scale_fill_manual(values=visitColors)
       }
       else if (input$selectDmPc == 2) {
-          citi4Type.m <- melt(citi4Type, id.vars = "job_type")
-          colnames(citi4Type.m)[colnames(citi4Type.m)=="variable"] <- "visiting"
+          citi4Type.m <- tidyr::gather(citi4Type, key, value, -job_type)
+          colnames(citi4Type.m)[colnames(citi4Type.m)=="key"] <- "visiting"
           p <- ggplot(citi4Type.m, aes(job_type, value)) + labs(x="Job Type", y="Number of Alumni") + guides(fill=guide_legend(title="Country\n origin"))
           p <- p + geom_bar(aes(fill = visiting), position = "dodge", stat="identity")
           p <- p + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + scale_fill_manual(values=visitColors)
       }
       else {
-          citi4Spec.m <- melt(citi4Spec, id.vars = "specifics")
-          colnames(citi4Spec.m)[colnames(citi4Spec.m)=="variable"] <- "visiting"
+          citi4Spec.m <- tidyr::gather(citi4Spec, key, value, -specifics)
+          colnames(citi4Spec.m)[colnames(citi4Spec.m)=="key"] <- "visiting"
           p <- ggplot(citi4Spec.m, aes(specifics, value)) + labs(x="Job Specifics", y="Number of Alumni") + guides(fill=guide_legend(title="Country\n origin"))
           p <- p + geom_bar(aes(fill = visiting), position = "dodge", stat="identity")
           p <- p + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + scale_fill_manual(values=visitColors)
@@ -470,22 +487,22 @@ function(input, output, session) {
     }
     else if (input$selectDmTp == 'Trend') {
       if (input$selectDmPc == 1) {
-          vnvYrSect.m <- melt(citiYrSect, id.vars = c("job_sector","years"))
-          colnames(vnvYrSect.m)[colnames(vnvYrSect.m)=="variable"] <- "visiting"
+          vnvYrSect.m <- tidyr::gather(citiYrSect, key, value, -job_sector, -years)
+          colnames(vnvYrSect.m)[colnames(vnvYrSect.m)=="key"] <- "visiting"
           p <- ggplot(vnvYrSect.m, aes(job_sector, value)) + labs(x="Job Sector", y="Number of Alumni") + guides(fill=guide_legend(title="Country\n origin"))
           p <- p + geom_bar(aes(fill = visiting), position = "dodge", stat="identity")
           p <- p + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + facet_grid( ~ years) + scale_fill_manual(values=visitColors)
       }
       else if (input$selectDmPc == 2) {
-          vnvYrType.m <- melt(citiYrType, id.vars = c("job_type","years"))
-          colnames(vnvYrType.m)[colnames(vnvYrType.m)=="variable"] <- "visiting"
+          vnvYrType.m <- tidyr::gather(citiYrType, key, value, -job_type, -years)
+          colnames(vnvYrType.m)[colnames(vnvYrType.m)=="key"] <- "visiting"
           p <- ggplot(vnvYrType.m, aes(job_type, value)) + labs(x="Job Type", y="Number of Alumni") + guides(fill=guide_legend(title="Country\n origin"))
           p <- p + geom_bar(aes(fill = visiting), position = "dodge", stat="identity")
           p <- p + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + facet_grid( ~ years) + scale_fill_manual(values=visitColors)
       }
       else {
-          vnvYrSpec.m <- melt(citiYrSpec, id.vars = c("specifics","years"))
-          colnames(vnvYrSpec.m)[colnames(vnvYrSpec.m)=="variable"] <- "visiting"
+          vnvYrSpec.m <- tidyr::gather(citiYrSpec, key, value, -specifics, -years)
+          colnames(vnvYrSpec.m)[colnames(vnvYrSpec.m)=="key"] <- "visiting"
           p <- ggplot(vnvYrSpec.m, aes(specifics, value)) + labs(x="Job Specifics", y="Number of Alumni") + guides(fill=guide_legend(title="Country\n origin"))
           p <- p + geom_bar(aes(fill = visiting), position = "dodge", stat="identity")
           p <- p + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + facet_grid( ~ years) + scale_fill_manual(values=visitColors)
@@ -500,22 +517,22 @@ function(input, output, session) {
       
       # plot
       if (input$selectDmPc == 1) {
-          vnvPlSect.m <- melt(pltCtzSec, id.vars = c("job_sector","years"))
-          colnames(vnvPlSect.m)[colnames(vnvPlSect.m)=="variable"] <- "visiting"
+          vnvPlSect.m <- tidyr::gather(pltCtzSec, key, value, -job_sector, -years)
+          colnames(vnvPlSect.m)[colnames(vnvPlSect.m)=="key"] <- "visiting"
           p <- ggplot(vnvPlSect.m, aes(job_sector, value)) + labs(x="Job Sector", y="Number of Alumni") + guides(fill=guide_legend(title="Country\n origin"))
           p <- p + geom_bar(aes(fill = visiting), position = "dodge", stat="identity")
           p <- p + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + scale_fill_manual(values=visitColors)
       }
       else if (input$selectDmPc == 2) {
-          vnvPlType.m <- melt(pltCtzTyp, id.vars = c("job_type","years"))
-          colnames(vnvPlType.m)[colnames(vnvPlType.m)=="variable"] <- "visiting"
+          vnvPlType.m <- tidyr::gather(pltCtzTyp, key, value, -job_type, -years)
+          colnames(vnvPlType.m)[colnames(vnvPlType.m)=="key"] <- "visiting"
           p <- ggplot(vnvPlType.m, aes(job_type, value)) + labs(x="Job Type", y="Number of Alumni") + guides(fill=guide_legend(title="Country\n origin"))
           p <- p + geom_bar(aes(fill = visiting), position = "dodge", stat="identity")
           p <- p + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + scale_fill_manual(values=visitColors)
       }
       else {
-          vnvPlSpec.m <- melt(pltCtzSpe, id.vars = c("specifics","years"))
-          colnames(vnvPlSpec.m)[colnames(vnvPlSpec.m)=="variable"] <- "visiting"
+          vnvPlSpec.m <- tidyr::gather(pltCtzSpe, key, value, -specifics, -years)
+          colnames(vnvPlSpec.m)[colnames(vnvPlSpec.m)=="key"] <- "visiting"
           p <- ggplot(vnvPlSpec.m, aes(specifics, value)) + labs(x="Job Specifics", y="Number of Alumni") + guides(fill=guide_legend(title="Country\n origin"))
           p <- p + geom_bar(aes(fill = visiting), position = "dodge", stat="identity")
           p <- p + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + scale_fill_manual(values=visitColors)
@@ -528,7 +545,7 @@ function(input, output, session) {
   # output citizen table
   output$visitTable <- renderTable({
     # choose data based on input$selectGt from ui.R
-    if (input$selectDmTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectDmTp == 'Whole time (2000-2019)') {
       if (input$selectDmPc == 1) {
         changeTableHeader(citi4Sect, c('Job_Sector','International','US'))
       }
@@ -575,8 +592,8 @@ function(input, output, session) {
           title = "Gender", width = 12,
           # The id lets us use input$tabset3 on the server to find the current tab
           id = "tab_gender",
-          tabPanel("Gender Likert plot", style = "overflow-x:scroll; overflow-y:scroll; height: 800px", htmlOutput("genderLtTxt"), plotOutput("genderLtPlot")),
-          tabPanel("Gender bar chart", style = "overflow-x:scroll; overflow-y:scroll; height: 800px", htmlOutput("genderPbTxt"), plotOutput("genderPbPlot")),
+          tabPanel("Gender Likert plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("genderLtTxt"), plotOutput("genderLtPlot")),
+          tabPanel("Gender bar chart", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("genderPbTxt"), plotOutput("genderPbPlot")),
           tabPanel("Gender data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("genderTable"))
         )
       )
@@ -588,8 +605,8 @@ function(input, output, session) {
           title = "Country origin", width = 12,
           # The id lets us use input$tabset4 on the server to find the current tab
           id = "tab_visit",
-          tabPanel("Origin Likert plot", style = "overflow-x:scroll; overflow-y:scroll; height: 800px", htmlOutput("visitLtTxt"), plotOutput("visitLtPlot")),
-          tabPanel("Origin bar chart", style = "overflow-x:scroll; overflow-y:scroll; height: 800px", htmlOutput("visitPbTxt"), plotOutput("visitPbPlot")),
+          tabPanel("Origin Likert plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("visitLtTxt"), plotOutput("visitLtPlot")),
+          tabPanel("Origin bar chart", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("visitPbTxt"), plotOutput("visitPbPlot")),
           tabPanel("Origin data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("visitTable"))
         )
       )
@@ -620,55 +637,28 @@ function(input, output, session) {
 
   # demographics information boxes
   output$demoInfoBox<-renderUI({
-    if (input$selectDmTp == 'Trend') {
-      gendData = gendYrAll
-      citiData = citiYrAll
-      
-      # https://stackoverflow.com/questions/15059076/call-apply-like-function-on-each-row-of-dataframe-with-multiple-arguments-from-e
-      gendData.m <- melt(gendData, id.vars = "years")
-      gendData.nm <- gendData.m %>% group_by(years) %>% mutate(Percent=round(value/sum(value),3)*100)
-      femalePct = paste0(gendData.nm[gendData.nm$variable == "Female",]$Percent,"%")
-      malePct = paste0(gendData.nm[gendData.nm$variable == "Male",]$Percent,"%")
-
-      citiData.m <- melt(citiData, id.vars = "years")
-      citiData.nm <- citiData.m %>% group_by(years) %>% mutate(Percent=round(value/sum(value),3)*100)
-      visitPct = paste0(citiData.nm[citiData.nm$variable == "International",]$Percent,"%")
-      usaPct = paste0(citiData.nm[citiData.nm$variable == "US",]$Percent,"%")
-      
-      box(
-        width = 12,
-        fluidRow(
-          infoBox("Female change", paste(femalePct, collapse = " -> "), icon = icon("female"), color = "maroon", fill=TRUE, width=3),
-          infoBox("Male change", paste(malePct, collapse = " -> "), icon = icon("male"), color = "blue", fill=TRUE, width=3),
-          infoBox("International fellow change", paste(visitPct, collapse = " -> "), icon = icon("globe"), color = "purple", fill=TRUE, width=3),
-          infoBox("US fellow change", paste(usaPct, collapse = " -> "), icon = icon("home"), color = "green", fill=TRUE, width=3)
-        )
-      )
+    if (input$selectDmTp == 'Whole time (2000-2019)') {
+      gendData = gend4All
+      citiData = citi4All
     }
     else {
-      if (input$selectDmTp == 'Left NIEHS in 2000-2014') {
-        gendData = gend4All
-        citiData = citi4All
-      }
-      else {
-        gendData = subset(gendYrAll, years == timeConvert(input$selectDmTp))
-        citiData = subset(citiYrAll, years == timeConvert(input$selectDmTp))
-      }
-      malePct = as.numeric(gendData[,"Male"] / (gendData[,"Male"] + gendData[,"Female"]))
-      femalePct = 1 - malePct
-      visitPct = as.numeric(citiData[,"International"] / (citiData[,"International"] + citiData[,"US"]))
-      usaPct = 1 - visitPct
-      
-      box(
-        width = 12,
-        fluidRow(
-          infoBox("Female", paste0(round(femalePct, 3)*100, "%"), icon = icon("female"), color = "maroon", fill=TRUE, width=3),
-          infoBox("Male", paste0(round(malePct, 3)*100, "%"), icon = icon("male"), color = "blue", fill=TRUE, width=3),
-          infoBox("Int'l fellow", paste0(round(visitPct, 3)*100, "%"), icon = icon("globe"), color = "purple", fill=TRUE, width=3),
-          infoBox("US fellow", paste0(round(usaPct, 3)*100, "%"), icon = icon("home"), color = "green", fill=TRUE, width=3)
-        )
-      )
+      gendData = subset(gendYrAll, years == timeConvert(input$selectDmTp))
+      citiData = subset(citiYrAll, years == timeConvert(input$selectDmTp))
     }
+    malePct = as.numeric(gendData[,"Male"] / (gendData[,"Male"] + gendData[,"Female"]))
+    femalePct = 1 - malePct
+    visitPct = as.numeric(citiData[,"International"] / (citiData[,"International"] + citiData[,"US"]))
+    usaPct = 1 - visitPct
+      
+    box(
+      width = 12,
+      fluidRow(
+        infoBox("Female", paste0(round(femalePct, 3)*100, "%"), icon = icon("female"), color = "maroon", fill=TRUE, width=3),
+        infoBox("Male", paste0(round(malePct, 3)*100, "%"), icon = icon("male"), color = "blue", fill=TRUE, width=3),
+        infoBox("Int'l fellow", paste0(round(visitPct, 3)*100, "%"), icon = icon("globe-americas"), color = "purple", fill=TRUE, width=3),
+        infoBox("US fellow", paste0(round(usaPct, 3)*100, "%"), icon = icon("home"), color = "green", fill=TRUE, width=3)
+      )
+    )
   })
   
   
@@ -724,7 +714,7 @@ function(input, output, session) {
       circos.clear()
     }
     
-    if (input$selectLcTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectLcTp == 'Whole time (2000-2019)') {
       migrate <- makeCircMD(mgrCountryAll)
     }
     else {
@@ -739,7 +729,7 @@ function(input, output, session) {
   
   output$migrateTxt  <- renderText({
     slctYear <- timeConvert(input$selectLcTp)
-    if (input$selectLcTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectLcTp == 'Whole time (2000-2019)') {
       migrData = dataGroup
     }
     else {
@@ -758,7 +748,7 @@ function(input, output, session) {
   
   # output migration table
   output$migrateTable <- renderTable({
-    if (input$selectLcTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectLcTp == 'Whole time (2000-2019)') {
       migrate <- makeCircMD(mgrCountryAll)
     }
     else {
@@ -781,7 +771,7 @@ function(input, output, session) {
     # choose data based on input$selectLcTp from ui.R
     slctYear <- timeConvert(input$selectLcTp)
     tlYear <- slctYear
-    if (input$selectLcTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectLcTp == 'Whole time (2000-2019)') {
       stData <- dfStateAll
       tlYear <- totalYrs
     }
@@ -810,7 +800,7 @@ function(input, output, session) {
   
   output$stateTxt  <- renderText({
     slctYear <- timeConvert(input$selectLcTp)
-    if (input$selectLcTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectLcTp == 'Whole time (2000-2019)') {
       migrData = dataGroup
     }
     else {
@@ -833,13 +823,12 @@ function(input, output, session) {
   # output working state table
   output$stateTable <- renderTable({
     slctYear <- timeConvert(input$selectLcTp)
-    if (input$selectLcTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectLcTp == 'Whole time (2000-2019)') {
       stData <- changeTableHeader(dfStateAll,c('State','Alumni_Count'))
     }
     else {
       stData <- changeTableHeader(dfStateYrs[dfStateYrs$years == slctYear, ], c('Years','State','Alumni_Count'))
     }
-    
     setDT(stData)[order(-Alumni_Count)]
   })
   
@@ -852,7 +841,7 @@ function(input, output, session) {
           title = "Alumni migration", width = 12,
           # The id lets us use input$tab_migr on the server to find the current tab
           id = "tab_migr",
-          tabPanel("Migration plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("migrateTxt"), plotOutput("migratePlot")),
+          tabPanel("Migration plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("migrateTxt"), plotOutput("migratePlot")),
           tabPanel("Migration data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("migrateTable"))
         )
       )
@@ -864,7 +853,7 @@ function(input, output, session) {
           title = "Alumni within U.S.", width = 12,
           # The id lets us use input$tab_state on the server to find the current tab
           id = "tab_state",
-          tabPanel("State plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("stateTxt"), plotOutput("statePlot")),
+          tabPanel("State plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("stateTxt"), plotOutput("statePlot")),
           tabPanel("State data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("stateTable"))
         )
       )
@@ -876,14 +865,14 @@ function(input, output, session) {
           title = "Alumni migration",
           # The id lets us use input$tab_migrSml on the server to find the current tab
           id = "tab_migrSml",
-          tabPanel("Migration plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("migrateTxt"), plotOutput("migratePlot")),
+          tabPanel("Migration plot", style = "overflow-x:scroll; overflow-y:scroll; height: 600px", htmlOutput("migrateTxt"), plotOutput("migratePlot")),
           tabPanel("Migration data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("migrateTable"))
         ),
         tabBox(
           title = "Alumni within U.S.",
           # The id lets us use input$tab_stateSml on the server to find the current tab
           id = "tab_stateSml",
-          tabPanel("State plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("stateTxt"), plotOutput("statePlot")),
+          tabPanel("State plot", style = "overflow-x:scroll; overflow-y:scroll; height: 600px", htmlOutput("stateTxt"), plotOutput("statePlot")),
           tabPanel("State data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("stateTable"))
         )
       )
@@ -893,7 +882,7 @@ function(input, output, session) {
   
   # location information boxes
   output$locaInfoBox<-renderUI({
-    if (input$selectLcTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectLcTp == 'Whole time (2000-2019)') {
       locData = dataGroup
     }
     else {
@@ -910,9 +899,9 @@ function(input, output, session) {
     box(
       width = 12,
       fluidRow(
-        infoBox("", value = tags$p(paste(visUS, "out of total", visTT, "international fellows remain in US"), style = "font-size: 75%;"), icon = icon("globe"), color = "maroon", fill=TRUE, width=3),
+        infoBox("", value = tags$p(paste(visUS, "out of total", visTT, "international fellows remain in US"), style = "font-size: 75%;"), icon = icon("globe-americas"), color = "maroon", fill=TRUE, width=3),
         infoBox("", value = tags$p(paste(nvsUS, "out of total", nvsTT, "US fellows remain in US"), style = "font-size: 75%;"), icon = icon("home"), color = "blue", fill=TRUE, width=3),
-        infoBox("", value = tags$p(paste(visNC, "international fellows remain in NC"), style = "font-size: 75%;"), icon = icon("globe"), color = "purple", fill=TRUE, width=3),
+        infoBox("", value = tags$p(paste(visNC, "international fellows remain in NC"), style = "font-size: 75%;"), icon = icon("globe-americas"), color = "purple", fill=TRUE, width=3),
         infoBox("", value = tags$p(paste(nvsNC, "US fellows remain in NC"), style = "font-size: 75%;"), icon = icon("home"), color = "green", fill=TRUE, width=3)
       )
     )
@@ -926,7 +915,7 @@ function(input, output, session) {
   
   # general career information boxes
   output$genrInfoBox<-renderUI({
-    if (input$selectGnrTp %in% c('Left NIEHS in 2000-2014', 'Trend')) {
+    if (input$selectGnrTp == 'Whole time (2000-2019)') {
       itmdData = dataGroup
     }
     else {
@@ -943,53 +932,55 @@ function(input, output, session) {
     box(
       width = 12,
       fluidRow(
-        valueBox(subtitle = paste0("in most common Job Sector: ", names(which(cGnrSectorPct==max(cGnrSectorPct)))), value = tags$p(paste0(max(cGnrSectorPct), "%"), style = "font-size: 75%;"), icon = icon("plus"), color = "maroon", width=4),
-        valueBox(subtitle = paste0("in most common Job Type: ", names(which(cGnrTypePct==max(cGnrTypePct)))), value = tags$p(paste0(max(cGnrTypePct), "%"), style = "font-size: 75%;"), icon = icon("plus"), color = "yellow", width=4),
-        valueBox(subtitle = paste0("in most common Job Specifics: ", names(which(cGnrSpecPct==max(cGnrSpecPct)))), value = tags$p(paste0(max(cGnrSpecPct), "%"), style = "font-size: 75%;"), icon = icon("plus"), color = "blue", width=4)
+        valueBox(subtitle = paste0("in most common Job Sector: ", names(which(cGnrSectorPct==max(cGnrSectorPct)))[1]), value = tags$p(paste0(max(cGnrSectorPct), "%"), style = "font-size: 75%;"), icon = icon("plus"), color = "maroon", width=4),
+        valueBox(subtitle = paste0("in most common Job Type: ", names(which(cGnrTypePct==max(cGnrTypePct)))[1]), value = tags$p(paste0(max(cGnrTypePct), "%"), style = "font-size: 75%;"), icon = icon("plus"), color = "yellow", width=4),
+        valueBox(subtitle = paste0("in most common Job Specifics: ", names(which(cGnrSpecPct==max(cGnrSpecPct)))[1]), value = tags$p(paste0(max(cGnrSpecPct), "%"), style = "font-size: 75%;"), icon = icon("plus"), color = "blue", width=4)
       ),
       fluidRow(
-        valueBox(subtitle = paste0("in least common Job Sector: ", names(which(cGnrSectorPct==min(cGnrSectorPct)))), value = tags$p(paste0(min(cGnrSectorPct), "%"), style = "font-size: 75%;"), icon = icon("minus"), color = "maroon", width=4),
-        valueBox(subtitle = paste0("in least common Job Type: ", names(which(cGnrTypePct==min(cGnrTypePct)))), value = tags$p(paste0(min(cGnrTypePct), "%"), style = "font-size: 75%;"), icon = icon("minus"), color = "yellow", width=4),
-        valueBox(subtitle = paste0("in least common Job Specifics: ", names(which(cGnrSpecPct==min(cGnrSpecPct)))), value = tags$p(paste0(min(cGnrSpecPct), "%"), style = "font-size: 75%;"), icon = icon("minus"), color = "blue", width=4)
+        valueBox(subtitle = paste0("in least common Job Sector: ", names(which(cGnrSectorPct==min(cGnrSectorPct)))[1]), value = tags$p(paste0(min(cGnrSectorPct), "%"), style = "font-size: 75%;"), icon = icon("minus"), color = "maroon", width=4),
+        valueBox(subtitle = paste0("in least common Job Type: ", names(which(cGnrTypePct==min(cGnrTypePct)))[1]), value = tags$p(paste0(min(cGnrTypePct), "%"), style = "font-size: 75%;"), icon = icon("minus"), color = "yellow", width=4),
+        valueBox(subtitle = paste0("in least common Job Specifics: ", names(which(cGnrSpecPct==min(cGnrSpecPct)))[1]), value = tags$p(paste0(min(cGnrSpecPct), "%"), style = "font-size: 75%;"), icon = icon("minus"), color = "blue", width=4)
       )
     )
   })
   
   
   #>>> general career plot start
-  colorJSect = c("Academic institution"="#94363a",
-                 "For-profit company"="#f19493",
-                 "Government agency"="#b15426",
-                 "Indep./self-employed"="#f285a8",
-                 "Non-profit organization"="#933761",
-                 "Unknown or Undecided"="#da9a54")
-  
-  colorJType = c("Management"="#24594d",
-                 "Non-tenure track faculty" ="#8acfbf",
-                 "Professional staff"="#255a2d",
-                 "Support staff"="#23787a",
-                 "Tenure track faculty"="#6cc06d",
-                 "Trainee" ="#5e7e37", 
-                 "Unknown or Undecided"="#89c658")
-  
-  colorJSpec = c("Additional postdoc"="#225f7b",
-                 "Computation/informatics"="#a792c5",
-                 "Primarily applied research"="#8b9fd1",
-                 "Primarily basic research"="#243e7d",
-                 "Primarily clinical research"="#747fbe",
-                 "Primarily teaching"="#6b417d",
-                 "Regulatory affairs"="#23787a",
-                 "REST COMBINED"="#47427e",
-                 "Science admin./PMT"="#85357a",
-                 "Science writing or comm."="#c06aaa",
-                 "Technical/customer support"="#4bc4d2",
-                 "Unknown or Undecided"="#8dbbd8")
+  # colorJSect = c("Academic institution"="#94363a",
+  #                "For-profit company"="#f19493",
+  #                "Government agency"="#b15426",
+  #                "Indep./self-employed"="#f285a8",
+  #                "Non-profit organization"="#933761",
+  #                "Unknown or Undecided"="#da9a54")
+  # 
+  # colorJType = c("Management"="#24594d",
+  #                "Non-tenure track faculty" ="#8acfbf",
+  #                "Professional staff"="#255a2d",
+  #                "Support staff"="#23787a",
+  #                "Tenure track faculty"="#6cc06d",
+  #                "Trainee" ="#5e7e37", 
+  #                "Unknown or Undecided"="#89c658")
+  # 
+  # colorJSpec = c("Additional postdoc"="#225f7b",
+  #                "Computation/informatics"="#a792c5",
+  #                "Consulting"="#655F9F",
+  #                "Grants management"="#5655A9",
+  #                "Primarily applied research"="#8b9fd1",
+  #                "Primarily basic research"="#243e7d",
+  #                "Primarily clinical research"="#747fbe",
+  #                "Primarily teaching"="#6b417d",
+  #                "Regulatory affairs"="#23787a",
+  #                "REST COMBINED"="#47427e",
+  #                "Science admin./PMT"="#85357a",
+  #                "Science writing or comm."="#c06aaa",
+  #                "Technical/customer support"="#4bc4d2",
+  #                "Unknown or Undecided"="#8dbbd8")
   
   # donut plot job sector data
   output$jobSectDonut <- renderPlotly({
     # choose data based on input$selectGnrTp from ui.R
     slctYear <- input$selectGnrTp
-    if (slctYear == 'Left NIEHS in 2000-2014') {
+    if (slctYear == 'Whole time (2000-2019)') {
       p <- dfJobSectAll %>% plot_ly(labels = ~Sector, values = ~Count, insidetextfont = list(color = '#FFFFFF'),
                                     marker = list(colors = colorJSect, line = list(color = '#FFFFFF', width = 1)), width = input$sldWidthGnr, height = input$sldHeightGnr) %>%
               add_pie(hole = 0.6) %>%
@@ -1053,7 +1044,7 @@ function(input, output, session) {
   
   output$jobSectDonutTxt  <- renderText({
     slctYear <- timeConvert(input$selectGnrTp)
-    if (input$selectGnrTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectGnrTp == 'Whole time (2000-2019)') {
       gnrData = dataGroup
     }
     else {
@@ -1075,7 +1066,7 @@ function(input, output, session) {
   output$jobSectBar <- renderPlotly({
     # choose data based on input$selectGnrTp from ui.R
     slctYear <- input$selectGnrTp
-    if (slctYear == 'Left NIEHS in 2000-2014') {
+    if (slctYear == 'Whole time (2000-2019)') {
       jscData = dfJobSectAll
       jscData$Text = paste0(jscData$Sector, ": ", jscData$Count, " (", round(jscData$Postdoc*100,2), "%)")
       p <- plot_ly(jscData,x = "", y = ~Postdoc*100, type = 'bar',color = ~Sector,colors = colorJSect,text=~Text,
@@ -1103,7 +1094,7 @@ function(input, output, session) {
   
   output$jobSectBarTxt  <- renderText({
     slctYear <- timeConvert(input$selectGnrTp)
-    if (input$selectGnrTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectGnrTp == 'Whole time (2000-2019)') {
       gnrData = dataGroup
     }
     else {
@@ -1123,7 +1114,7 @@ function(input, output, session) {
   
   # output job sector table
   output$jobSectTable <- renderTable({
-    if (input$selectGnrTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectGnrTp == 'Whole time (2000-2019)') {
       jscData <- changeTableHeader(dfJobSectAll,c('Job_Sector','Alumni_Count','Alumni_Portion'))
     }
     else if (input$selectGnrTp == 'Trend') {
@@ -1139,7 +1130,7 @@ function(input, output, session) {
   output$jobTypeDonut <- renderPlotly({
     # choose data based on input$selectGnrTp from ui.R
     slctYear <- input$selectGnrTp
-    if (slctYear == 'Left NIEHS in 2000-2014') {
+    if (slctYear == 'Whole time (2000-2019)') {
       p <- dfJobTypeAll %>% plot_ly(labels = ~Type, values = ~Count, insidetextfont = list(color = '#FFFFFF'),
                                     marker = list(colors = colorJType, line = list(color = '#FFFFFF', width = 1)), width = input$sldWidthGnr, height = input$sldHeightGnr) %>%
         add_pie(hole = 0.6) %>%
@@ -1203,7 +1194,7 @@ function(input, output, session) {
   
   output$jobTypeDonutTxt  <- renderText({
     slctYear <- timeConvert(input$selectGnrTp)
-    if (input$selectGnrTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectGnrTp == 'Whole time (2000-2019)') {
       gnrData = dataGroup
     }
     else {
@@ -1225,7 +1216,7 @@ function(input, output, session) {
   output$jobTypeBar <- renderPlotly({
     # choose data based on input$selectGnrTp from ui.R
     slctYear <- input$selectGnrTp
-    if (slctYear == 'Left NIEHS in 2000-2014') {
+    if (slctYear == 'Whole time (2000-2019)') {
       jtpData = dfJobTypeAll
       jtpData$Text = paste0(jtpData$Type, ": ", jtpData$Count, " (", round(jtpData$Postdoc*100,2), "%)")
       p <- plot_ly(jtpData,x = "", y = ~Postdoc*100, type = 'bar',color = ~Type,colors = colorJType,text=~Text,
@@ -1253,7 +1244,7 @@ function(input, output, session) {
   
   output$jobTypeBarTxt  <- renderText({
     slctYear <- timeConvert(input$selectGnrTp)
-    if (input$selectGnrTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectGnrTp == 'Whole time (2000-2019)') {
       gnrData = dataGroup
     }
     else {
@@ -1273,7 +1264,7 @@ function(input, output, session) {
   
   # output job type table
   output$jobTypeTable <- renderTable({
-    if (input$selectGnrTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectGnrTp == 'Whole time (2000-2019)') {
       jtpData <- changeTableHeader(dfJobTypeAll,c('Job_Type','Alumni_Count','Alumni_Portion'))
     }
     else if (input$selectGnrTp == 'Trend') {
@@ -1290,7 +1281,7 @@ function(input, output, session) {
   output$jobSpecDonut <- renderPlotly({
     # choose data based on input$selectGnrTp from ui.R
     slctYear <- input$selectGnrTp
-    if (slctYear == 'Left NIEHS in 2000-2014') {
+    if (slctYear == 'Whole time (2000-2019)') {
       p <- dfJobSpecAll %>% plot_ly(labels = ~Specifics, values = ~Count, insidetextfont = list(color = '#FFFFFF'),
                                     marker = list(colors = colorJSpec, line = list(color = '#FFFFFF', width = 1)), width = input$sldWidthGnr, height = input$sldHeightGnr) %>%
         add_pie(hole = 0.6) %>%
@@ -1354,7 +1345,7 @@ function(input, output, session) {
   
   output$jobSpecDonutTxt  <- renderText({
     slctYear <- timeConvert(input$selectGnrTp)
-    if (input$selectGnrTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectGnrTp == 'Whole time (2000-2019)') {
       gnrData = dataGroup
     }
     else {
@@ -1362,21 +1353,20 @@ function(input, output, session) {
     }
     
     talDAT = nrow(gnrData)
-    cntRSC = sum(gnrData$specifics %in% c('Primarily basic research','Primarily applied research','Primarily clinical research','Computation/informatics','Additional postdoc'))
+    cntRSC = sum(gnrData$specifics %in% c('Primarily basic research','Primarily applied research','Primarily clinical research','Computation/informatics','Additional postdoctoral training'))
     pctRSC = round(cntRSC / talDAT, 3) * 100
 
     HTML(paste0("<p><strong>Career Outcomes in Different Job Specifics</strong> In ", slctYear, ", ", pctRSC,
          "% of all alumni enter into research-based positions, whether basic, applied, clinical, computation/informatics, or whether continuing research in another postdoc position. 
          The remainder are mostly involved in science-related non-research positions.
-         Each job specifics category in Career classification - Job specifics table that was populated with a small number of alumni was grouped into a category termed ‘REST COMBINED’ for ease of illustration. 
-         These categories (denoted by * within the table) include: Additional Degree, Business Development/Operations, Clinical Practice, Consulting, Grants Management, IP/Patenting, Sales, Science Policy.</p><p>&nbsp;</p>"))
+         Each job specifics category in Career classification - Job specifics that are not among the top 12 categories are grouped into one category termed ‘REST COMBINED’ for ease of illustration.</p><p>&nbsp;</p>"))
   })
   
   # bar plot job specifics data
   output$jobSpecBar <- renderPlotly({
     # choose data based on input$selectGnrTp from ui.R
     slctYear <- input$selectGnrTp
-    if (slctYear == 'Left NIEHS in 2000-2014') {
+    if (slctYear == 'Whole time (2000-2019)') {
       jspData = dfJobSpecAll
       jspData$Text = paste0(jspData$Specifics, ": ", jspData$Count, " (", round(jspData$Postdoc*100,2), "%)")
       p <- plot_ly(jspData,x = "", y = ~Postdoc*100, type = 'bar',color = ~Specifics,colors = colorJSpec,text=~Text,
@@ -1404,7 +1394,7 @@ function(input, output, session) {
   
   output$jobSpecBarTxt  <- renderText({
     slctYear <- timeConvert(input$selectGnrTp)
-    if (input$selectGnrTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectGnrTp == 'Whole time (2000-2019)') {
       gnrData = dataGroup
     }
     else {
@@ -1412,26 +1402,19 @@ function(input, output, session) {
     }
     
     talDAT = nrow(gnrData)
-    cntRSC = sum(gnrData$specifics %in% c('Primarily basic research','Primarily applied research','Primarily clinical research','Computation/informatics','Additional postdoc'))
+    cntRSC = sum(gnrData$specifics %in% c('Primarily basic research','Primarily applied research','Primarily clinical research','Computation/informatics','Additional postdoctoral training'))
     pctRSC = round(cntRSC / talDAT, 3) * 100
     
     HTML(paste0("<p><strong>Career Outcomes in Different Job Specifics (Bar Chart)</strong> In ", slctYear, ", ", pctRSC,
                 "% of all alumni enter into research-based positions, whether basic, applied, clinical, computation/informatics, or whether continuing research in another postdoc position. 
                 The remainder are mostly involved in science-related non-research positions.
-                Each job specifics category in Career classification - Job specifics table that was populated with a small number of alumni was grouped into a category termed ‘REST COMBINED’ for ease of illustration. 
-                These categories (denoted by * within the table) include: Additional Degree, Business Development/Operations, Clinical Practice, Consulting, Grants Management, IP/Patenting, Sales, Science Policy.</p><p>&nbsp;</p>"))
+                Each job specifics category in Career classification - Job specifics that are not among the top 12 categories are grouped into one category termed ‘REST COMBINED’ for ease of illustration.</p><p>&nbsp;</p>"))
   })
-  # https://stackoverflow.com/questions/34315485/linking-to-a-tab-or-panel-of-a-shiny-app
-  # https://stackoverflow.com/questions/37169039/direct-link-to-tabitem-with-r-shiny-dashboard
-  # https://stackoverflow.com/questions/33021757/externally-link-to-specific-tabpanel-in-shiny-app
-  # https://stackoverflow.com/questions/28605185/create-link-to-the-other-part-of-the-shiny-app/28605517#28605517
-  # https://stackoverflow.com/questions/27303526/r-shiny-build-links-between-tabs
-  # https://github.com/rstudio/shiny/issues/772#issuecomment-112919149
-  # https://groups.google.com/forum/#!msg/shiny-discuss/sJlasQf71fY/RW7Xc8F02IoJ
+  
   
   # output job specifics table
   output$jobSpecTable <- renderTable({
-    if (input$selectGnrTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectGnrTp == 'Whole time (2000-2019)') {
       jspData <- changeTableHeader(dfJobSpecAll,c('Job_Specifics','Alumni_Count','Alumni_Portion'))
     }
     else if (input$selectGnrTp == 'Trend') {
@@ -1452,7 +1435,7 @@ function(input, output, session) {
           title = "Job Sector", width = 12,
           # The id lets us use input$tab_genJSector on the server to find the current tab
           id = "tab_genJSector",
-          tabPanel("Job sector chart", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("jobSectDonutTxt"), plotlyOutput("jobSectDonut")),
+          tabPanel("Job sector chart", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("jobSectDonutTxt"), plotlyOutput("jobSectDonut")),
           # tabPanel("Job sector bar chart", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("jobSectBarTxt"), plotlyOutput("jobSectBar")),
           tabPanel("Job sector data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("jobSectTable"))
         )
@@ -1465,7 +1448,7 @@ function(input, output, session) {
           title = "Job Type", width = 12,
           # The id lets us use input$tab_genJType on the server to find the current tab
           id = "tab_genJType",
-          tabPanel("Job type chart", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("jobTypeDonutTxt"), plotlyOutput("jobTypeDonut")),
+          tabPanel("Job type chart", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("jobTypeDonutTxt"), plotlyOutput("jobTypeDonut")),
           # tabPanel("Job type bar chart", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("jobTypeBarTxt"), plotlyOutput("jobTypeBar")),
           tabPanel("Job type data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("jobTypeTable"))
         )
@@ -1478,7 +1461,7 @@ function(input, output, session) {
           title = "Job Specifics", width = 12,
           # The id lets us use input$tab_genJSpec on the server to find the current tab
           id = "tab_genJSpec",
-          tabPanel("Job specifics chart", style = "overflow-x:scroll; overflow-y:scroll; height: 600px", htmlOutput("jobSpecDonutTxt"), plotlyOutput("jobSpecDonut")),
+          tabPanel("Job specifics chart", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("jobSpecDonutTxt"), plotlyOutput("jobSpecDonut")),
           # tabPanel("Job specifics bar chart", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("jobSpecBarTxt"), plotlyOutput("jobSpecBar")),
           tabPanel("Job specifics data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("jobSpecTable"))
         )
@@ -1529,29 +1512,71 @@ function(input, output, session) {
   
   # Sankey plot
   output$jobSankeyPlot <- renderPlotly({
+    # convert format from GVis to NetD3 
     sankeyData_gvisTOnetD3 <- function(gvisData, from="from", to="to", weight="weight") {
       # create nodes data frame
       vNode = unique(c(gvisData[,from], gvisData[,to]))
       nodesDF = data.frame(name=vNode)
-      
+
       # add sequence number into nodes data frame extension
       nodes_ext = nodesDF
       nodes_ext$id = seq.int(nrow(nodes_ext))-1
       nodesDF$name <- as.character(nodesDF$name)
-      
+
       # create links data frame by matching node name
       # http://stackoverflow.com/questions/11530184/match-values-in-data-frame-with-values-in-another-data-frame-and-replace-former
       linksDF = data.frame(source=nodes_ext[match(gvisData[,from], nodes_ext$name), 2],
                            target=nodes_ext[match(gvisData[,to], nodes_ext$name), 2], value=gvisData$weight)
-      
+
       netD3Data = list(nodes=nodesDF, links=linksDF)
-      
+
       return(netD3Data)
     }
     
+    # (1/14/21) color assignment by name
+    colorSankey_name2value <- function(nameVec) {
+      colorTable = c(
+        "Academic institution"="#94363a",
+        "For-profit company"="#f19493",
+        "Government agency"="#ef86ab",
+        "Indep./self-employed"="#99335c",
+        "Non-profit organization"="#b44e11",
+        "Unknown (sector)"="#da9a54",
+        "Management"="#24594d",
+        "Non-tenure track faculty" ="#8acfbf",
+        "Professional staff"="#255a2d",
+        "Support staff"="#23787a",
+        "Tenure track faculty"="#6cc06d",
+        "Trainee" ="#5e7e37", 
+        "Unknown (type)"="#89c658",
+        "Additional postdoc"="#225f7b",
+        "Computation/informatics"="#a792c5",
+        "Consulting"="#655F9F",
+        "Grants management"="#5655A9",
+        "Primarily applied research"="#8b9fd1",
+        "Primarily basic research"="#243e7d",
+        "Primarily clinical research"="#747fbe",
+        "Primarily clinical practice"="#483a77",
+        "Primarily teaching"="#6b417d",
+        "Regulatory affairs"="#23787a",
+        "REST COMBINED"="#47427e",
+        "Science admin./PMT"="#85357a",
+        "Science writing or comm."="#c06aaa",
+        "Technical/customer support"="#4bc4d2",
+        "Unknown (specifics)"="#8dbbd8"
+      )
+      colorVec = c()
+      for (i in 1:length(nameVec)) {
+        name = nameVec[i]
+        colorVec[i] = colorTable[name]
+      }
+      
+      return(colorVec)
+    }
+
     # choose data based on input$selectGnrTp from ui.R
     slctYear <- input$selectRlnTp
-    if (slctYear == 'Left NIEHS in 2000-2014') {
+    if (slctYear == 'Whole time (2000-2019)') {
       skData = dataGroup
     }
     else if (slctYear == 'Trend') {
@@ -1561,7 +1586,7 @@ function(input, output, session) {
     else {
       skData = dataGroup[dataGroup$years == timeConvert(slctYear), ]
     }
-    
+
     dataSecTyp <- skData %>% group_by(job_sector,job_type) %>% summarise (weight = n())
     dataSecTyp$job_sector <- as.character(dataSecTyp$job_sector)
     dataSecTyp$job_sector[dataSecTyp$job_sector == 'Unknown or Undecided'] <- "Unknown (sector)"
@@ -1571,7 +1596,7 @@ function(input, output, session) {
     dataSecTyp$job_type <- factor(dataSecTyp$job_type)
     colnames(dataSecTyp)[colnames(dataSecTyp)=="job_sector"] <- "from"
     colnames(dataSecTyp)[colnames(dataSecTyp)=="job_type"] <- "to"
-    
+
     dataTypSpe <- skData %>% group_by(job_type, specifics) %>% summarise (weight = n())
     dataTypSpe$job_type <- as.character(dataTypSpe$job_type)
     dataTypSpe$job_type[dataTypSpe$job_type == 'Unknown or Undecided'] <- "Unknown (type)"
@@ -1581,10 +1606,16 @@ function(input, output, session) {
     dataTypSpe$specifics <- factor(dataTypSpe$specifics)
     colnames(dataTypSpe)[colnames(dataTypSpe)=="job_type"] <- "from"
     colnames(dataTypSpe)[colnames(dataTypSpe)=="specifics"] <- "to"
-    
+
     dataSK <- bind_rows(as.data.frame(dataSecTyp), as.data.frame(dataTypSpe))
-    netD3 <- sankeyData_gvisTOnetD3(dataSK)
     
+    # After upgrade to R 4.0, the data fail to plot (07/23/2020)
+    # add below two lines to fix the problem
+    dataSK$from <- as.character(dataSK$from)
+    dataSK$to <- as.character(dataSK$to)
+    
+    netD3 <- sankeyData_gvisTOnetD3(dataSK)
+
     p <- plot_ly(
       type = "sankey",
       domain = c(
@@ -1593,12 +1624,10 @@ function(input, output, session) {
       ),
       orientation = "h",
       valueformat = ".0f",
-      
+
       node = list(
         label = netD3$nodes$name,
-        color = c("#8a2105","#f19898","#ef86ab","#99335c","#b44e11","#df9f4d",
-                  "#295a29","#89f3d2","#04e0e8","#295a4c","#61d661","#617d0d","#91c844",
-                  "#9bc2df","#97a9f5","#6c3a77","#b399c9","#8787fb","#483a77","#215c7a","#21327a","#21777a","#04e0e8","#e461c4","#892f73"),
+        color = colorSankey_name2value(netD3$nodes$name),
         pad = 15,
         thickness = 15,
         line = list(
@@ -1606,7 +1635,7 @@ function(input, output, session) {
           width = 0.5
         )
       ),
-      
+
       link = list(
         source = netD3$links$source,
         target = netD3$links$target,
@@ -1614,7 +1643,7 @@ function(input, output, session) {
         label =  netD3$links$job_cat
       ),
       width = input$sldWidthRln, height = input$sldHeightRln
-    ) %>% 
+    ) %>%
       layout(
         title = "Connection Between Job Sectors, Job Types, and Job Specifics",
         font = list(
@@ -1623,10 +1652,11 @@ function(input, output, session) {
         # xaxis = list(showgrid = F, zeroline = F),
         # yaxis = list(showgrid = F, zeroline = F)
       )
-    
+
     p
   })
   
+
   # output$jobSankeyTxt  <- renderText({HTML("<p><strong>Relationship Between Job Sectors, Job Types and Job Specifics</strong> 
   #                                          The width of the lines is proportional to the relative quantity of scholars within each group. 
   #                                          <i>(Left & Middle) Division of job sectors by job type.</i> Focusing on the academic sector as an example, it can be seen that not all academic positions are tenure-track. The remainder of those in the academic sector are divided between professional, management, support, non-tenure-track, or trainee job types. 
@@ -1635,7 +1665,7 @@ function(input, output, session) {
   # output Sankey data table
   output$jobSankeyTable <- renderTable({
     slctYear <- input$selectRlnTp
-    if (slctYear == 'Left NIEHS in 2000-2014') {
+    if (slctYear == 'Whole time (2000-2019)') {
       skData = dataGroup
     }
     else if (slctYear == 'Trend') {
@@ -1663,7 +1693,7 @@ function(input, output, session) {
     colnames(dataTypSpe)[colnames(dataTypSpe)=="specifics"] <- "to"
     
     dataSK <- bind_rows(as.data.frame(dataSecTyp), as.data.frame(dataTypSpe))
-    colnames(dataSK) <- c('Job_Population','Job_Subpopulation','Alumni_Count')
+    colnames(dataSK) <- c('Job population','Job subpopulation','Count')
     dataSK
   })
   
@@ -1697,7 +1727,7 @@ function(input, output, session) {
   output$hlTenurePlot <- renderSunburst({
     # choose data based on input$selectHlTp from ui.R
     slctYear <- input$selectHlTp
-    if (slctYear == 'Left NIEHS in 2000-2014') {
+    if (slctYear == 'Whole time (2000-2019)') {
       skData = dataGroup
     }
     else {
@@ -1723,17 +1753,26 @@ function(input, output, session) {
   })
   
   output$hlTenureTxt  <- renderText({
-    HTML("<p><strong>Closer Look at All Tenure-Track Positions</strong> 
-         We examined the relative proportion of U.S. versus international scholars in tenure-track positions, and found that majority of tenure-track faculty positions are held by international scholars (center circle, light magenta). 
-         However, most hold these positions abroad (outer circle, dark purple). 
-         Of the U.S. scholars, most hold tenure-track positions in the United States (outer circle, dark green), with only small percentage of tenure-track positions being held by U.S. scholars abroad (outer circle, light green).</p><p>&nbsp;</p>")
+    slctYear <- timeConvert(input$selectHlTp)
+    if (slctYear == '2015-2019') {
+      HTML("<p><strong>Closer Look at All Tenure-Track Positions</strong> 
+           We found that more international scholars (center circle, light magenta) than US scholars (center circle, light green) are in tenure-track positions. More than half of the international scholars hold tenure-track positions in US (outer circle, purple). 
+           Of the U.S. scholars, most hold tenure-track positions in the United States (outer circle, dark green), with only small percentage of tenure-track positions being held by U.S. scholars abroad (outer circle, green).
+           </p><p>&nbsp;</p>")
+    }
+    else {
+      HTML("<p><strong>Closer Look at All Tenure-Track Positions</strong> 
+           We examined the relative proportion of U.S. versus international scholars in tenure-track positions, and found that majority of tenure-track faculty positions are held by international scholars (center circle, light magenta). 
+           However, most international scholars hold these positions abroad (outer circle, dark purple). 
+           Of the U.S. scholars, most hold tenure-track positions in the United States (outer circle, dark green), with only small percentage of tenure-track positions being held by U.S. scholars abroad (outer circle, green).</p><p>&nbsp;</p>")
+    }
   })
   
   # tenure-track table
   output$hlTenureTable <- renderTable({
     # choose data based on input$selectHlTp from ui.R
     slctYear <- input$selectHlTp
-    if (slctYear == 'Left NIEHS in 2000-2014') {
+    if (slctYear == 'Whole time (2000-2019)') {
       skData = dataGroup
     }
     else {
@@ -1750,14 +1789,14 @@ function(input, output, session) {
     skData_tt$job_country = factor(skData_tt$job_country)
     skData_tbl <- skData_tt %>% group_by(citizenship, job_country) %>% summarise(cnt = n())
     skData_tbl <- data.frame(skData_tbl) %>% mutate(freq=cnt/sum(cnt))
-    changeTableHeader(skData_tbl,c('Origin_Country','Job_Country','Alumni_Count','Alumni_Portion'))
+    changeTableHeader(skData_tbl, c('Origin_Country','Job_Country','Alumni_Count','Alumni_Portion'))
   })
   
   # additional training plot
   output$hlTrainPlot <- renderSunburst({
     # choose data based on input$selectHlTp from ui.R
     slctYear <- input$selectHlTp
-    if (slctYear == 'Left NIEHS in 2000-2014') {
+    if (slctYear == 'Whole time (2000-2019)') {
       skData = dataGroup
     }
     else {
@@ -1784,7 +1823,7 @@ function(input, output, session) {
   
   output$hlTrainTxt  <- renderText({
     slctYear <- timeConvert(input$selectHlTp)
-    if (slctYear %in% c('2000-2014','2010-2014')) {
+    if (slctYear %in% c('2000-2019','2010-2014','2015-2019')) {
       HTML("<p><strong>Closer Look at All Individuals Engaged in Additional Postdoctoral Training</strong> 
            We examined everyone that was engaged in additional postdoctoral training and found that the majority were international scholars (center circle, light magenta). 
            Most fellows conducted additional postdoctoral training within the United States, regardless of whether they were international or U.S. (outer circle, dark magenta & dark green, respectively).</p><p>&nbsp;</p>")
@@ -1807,7 +1846,7 @@ function(input, output, session) {
   output$hlTrainTable <- renderTable({
     # choose data based on input$selectHlTp from ui.R
     slctYear <- input$selectHlTp
-    if (slctYear == 'Left NIEHS in 2000-2014') {
+    if (slctYear == 'Whole time (2000-2019)') {
       skData = dataGroup
     }
     else {
@@ -1824,7 +1863,7 @@ function(input, output, session) {
     skData_tt$job_country = factor(skData_tt$job_country)
     skData_tbl <- skData_tt %>% group_by(citizenship, job_country) %>% summarise(cnt = n())
     skData_tbl <- data.frame(skData_tbl) %>% mutate(freq=cnt/sum(cnt))
-    changeTableHeader(skData_tbl,c('Origin_Country','Job_Country','Alumni_Count','Alumni_Portion'))
+    changeTableHeader(skData_tbl, c('Origin_Country','Job_Country','Alumni_Count','Alumni_Portion'))
   })
   
   output$hlDynamicUI<-renderUI({
@@ -1835,7 +1874,7 @@ function(input, output, session) {
           title = "Tenure track", width = 12,
           # The id lets us use input$tab_hlTT on the server to find the current tab
           id = "tab_hlTT",
-          tabPanel("Tenure track plot", style = "overflow-x:scroll; overflow-y:scroll; height: 600px", htmlOutput("hlTenureTxt"), sunburstOutput("hlTenurePlot", width = input$sldWidthHl, height = input$sldHeightHl)),
+          tabPanel("Tenure track plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("hlTenureTxt"), sunburstOutput("hlTenurePlot", width = input$sldWidthHl, height = input$sldHeightHl)),
           tabPanel("Tenure track data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("hlTenureTable"))
         )
       )
@@ -1847,7 +1886,7 @@ function(input, output, session) {
           title = "Additional postdoc", width = 12,
           # The id lets us use input$tab_hlAT on the server to find the current tab
           id = "tab_hlAT",
-          tabPanel("Addt'l postdoc plot", style = "overflow-x:scroll; overflow-y:scroll; height: 600px", htmlOutput("hlTrainTxt"), sunburstOutput("hlTrainPlot", width = input$sldWidthHl, height = input$sldHeightHl)),
+          tabPanel("Addt'l postdoc plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("hlTrainTxt"), sunburstOutput("hlTrainPlot", width = input$sldWidthHl, height = input$sldHeightHl)),
           tabPanel("Addt'l postdoc data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("hlTrainTable"))
         )
       )
@@ -1884,22 +1923,20 @@ function(input, output, session) {
   # training time job sector plot
   output$tmSectPlot <- renderPlotly({
     # choose data based on input$selectTmTp from ui.R
-    if (input$selectTmTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectTmTp == 'Whole time (2000-2019)') {
       tmSect <- dataGroup
       time.sct = aggregate(months_postdoc ~ job_sector, tmSect, median)
       colnames(time.sct)[colnames(time.sct)=="months_postdoc"] <- "Median_time"
-      time.sct$sct_num = as.numeric(time.sct$job_sector)
       p <- ggplot(tmSect, aes(x = job_sector, y = months_postdoc, fill = job_sector)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.sct, aes(label=round(Median_time,1), x=sct_num+0.4, y = Median_time))
+      p <- p + coord_flip() + geom_text(data=time.sct, aes(label=round(Median_time,1), y = Median_time), color="white")
       p <- p + scale_fill_manual(values=colorJSect)
     }
     else if (input$selectTmTp == 'Trend') {
       tmSect <- dataGroup
       time.sct = aggregate(months_postdoc ~ years + job_sector, tmSect, median)
       colnames(time.sct)[colnames(time.sct)=="months_postdoc"] <- "Median_time"
-      time.sct$sct_num = as.numeric(time.sct$job_sector)
       p <- ggplot(tmSect, aes(x = years, y = months_postdoc, fill = years)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.sct, aes(label=round(Median_time,1), x=sct_num+0.4, y = Median_time))
+      p <- p + coord_flip() + geom_text(data=time.sct, aes(label=round(Median_time,1), y = Median_time), color="white")
       p <- p + facet_grid(job_sector ~ .)
       p <- p + theme(strip.text.y = element_text(size=10, face="bold"))
     }
@@ -1907,20 +1944,23 @@ function(input, output, session) {
       tmSect <- dataGroup[dataGroup$years == timeConvert(input$selectTmTp), ]
       time.sct = aggregate(months_postdoc ~ job_sector, tmSect, median)
       colnames(time.sct)[colnames(time.sct)=="months_postdoc"] <- "Median_time"
-      time.sct$sct_num = as.numeric(time.sct$job_sector)
       p <- ggplot(tmSect, aes(x = job_sector, y = months_postdoc, fill = job_sector)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.sct, aes(label=round(Median_time,1), x=sct_num+0.4, y = Median_time))
+      p <- p + coord_flip() + geom_text(data=time.sct, aes(label=round(Median_time,1), y = Median_time), color="white")
       p <- p + scale_fill_manual(values=colorJSect)
     }
     p <- p + ggtitle("Training Time (months)") + theme(legend.position="none") +
+          # labs(y='Months', x='Job Sector')
           labs(y='Months', x='')
-    gp <- ggplotly(p, width = input$sldWidthTm, height = input$sldHeightTm, tooltip=c("Median_time"))
+    # ggp_build <- plotly_build(p)
+    # ggp_build$layout$height = input$sldHeightTm
+    # ggp_build$layout$width = input$sldWidthTm - 10
+    gp <- ggplotly(p, width = input$sldWidthTm, height = input$sldHeightTm, tooltip=c("x", "Median_time"))
     gp # %>% layout(margin = list(l = 75))
   })
   
   output$tmSectTxt  <- renderText({
     slctYear <- timeConvert(input$selectTmTp)
-    if (input$selectTmTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectTmTp == 'Whole time (2000-2019)') {
       tmData = dataGroup
     }
     else {
@@ -1937,7 +1977,7 @@ function(input, output, session) {
   # training time job sector table
   output$tmSectTable <- renderTable({
     # choose data based on input$selectTmTp from ui.R
-    if (input$selectTmTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectTmTp == 'Whole time (2000-2019)') {
       tmSect <- changeTableHeader(dfTimeSectAll,c('Job_Sector','Avg_Time','Min_Time','Max_Time','Alumni_Count'))
     }
     else if (input$selectTmTp == 'Trend') {
@@ -1952,22 +1992,20 @@ function(input, output, session) {
   # training time job type plot
   output$tmTypePlot <- renderPlotly({
     # choose data based on input$selectTmTp from ui.R
-    if (input$selectTmTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectTmTp == 'Whole time (2000-2019)') {
       tmType <- dataGroup
       time.typ = aggregate(months_postdoc ~ job_type, tmType, median)
       colnames(time.typ)[colnames(time.typ)=="months_postdoc"] <- "Median_time"
-      time.typ$typ_num = as.numeric(time.typ$job_type)
       p <- ggplot(tmType, aes(x = job_type, y = months_postdoc, fill = job_type)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.typ, aes(label=round(Median_time,1), x=typ_num+0.4, y = Median_time))
+      p <- p + coord_flip() + geom_text(data=time.typ, aes(label=round(Median_time,1), y = Median_time), color="white")
       p <- p + scale_fill_manual(values=colorJType)
     }
     else if (input$selectTmTp == 'Trend') {
       tmType <- dataGroup
       time.typ = aggregate(months_postdoc ~ years + job_type, tmType, median)
       colnames(time.typ)[colnames(time.typ)=="months_postdoc"] <- "Median_time"
-      time.typ$typ_num = as.numeric(time.typ$job_type)
       p <- ggplot(tmType, aes(x = years, y = months_postdoc, fill = years)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.typ, aes(label=round(Median_time,1), x=typ_num+0.4, y = Median_time))
+      p <- p + coord_flip() + geom_text(data=time.typ, aes(label=round(Median_time,1), y = Median_time), color="white")
       p <- p + facet_grid(job_type ~ .)
       p <- p + theme(strip.text.y = element_text(size=10, face="bold"))
     }
@@ -1975,20 +2013,23 @@ function(input, output, session) {
       tmType <- dataGroup[dataGroup$years == timeConvert(input$selectTmTp), ]
       time.typ = aggregate(months_postdoc ~ job_type, tmType, median)
       colnames(time.typ)[colnames(time.typ)=="months_postdoc"] <- "Median_time"
-      time.typ$typ_num = as.numeric(time.typ$job_type)
       p <- ggplot(tmType, aes(x = job_type, y = months_postdoc, fill = job_type)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.typ, aes(label=round(Median_time,1), x=typ_num+0.4, y = Median_time))
+      p <- p + coord_flip() + geom_text(data=time.typ, aes(label=round(Median_time,1), y = Median_time), color="white")
       p <- p + scale_fill_manual(values=colorJType)
     }
     p <- p + ggtitle("Training Time (months)") + theme(legend.position="none") +
+      # labs(y='Months', x='Job Type')
       labs(y='Months', x='')
-    gp <- ggplotly(p, width = input$sldWidthTm, height = input$sldHeightTm, tooltip=c("Median_time"))
+    # ggp_build <- plotly_build(p)
+    # ggp_build$layout$height = input$sldHeightTm
+    # ggp_build$layout$width = input$sldWidthTm - 10
+    gp <- ggplotly(p, width = input$sldWidthTm, height = input$sldHeightTm, tooltip=c("x", "Median_time"))
     gp # %>% layout(margin = list(l = 75))
   })
   
   output$tmTypeTxt  <- renderText({
     slctYear <- timeConvert(input$selectTmTp)
-    if (input$selectTmTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectTmTp == 'Whole time (2000-2019)') {
       tmData = dataGroup
     }
     else {
@@ -2005,7 +2046,7 @@ function(input, output, session) {
   # training time job type table
   output$tmTypeTable <- renderTable({
     # choose data based on input$selectTmTp from ui.R
-    if (input$selectTmTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectTmTp == 'Whole time (2000-2019)') {
       tmType <- changeTableHeader(dfTimeTypeAll,c('Job_Type','Avg_Time','Min_Time','Max_Time','Alumni_Count'))
     }
     else if (input$selectTmTp == 'Trend') {
@@ -2020,22 +2061,20 @@ function(input, output, session) {
   # training time job specifics plot
   output$tmSpecPlot <- renderPlotly({
     # choose data based on input$selectTmTp from ui.R
-    if (input$selectTmTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectTmTp == 'Whole time (2000-2019)') {
       tmSpec <- dataGroup
       time.spc = aggregate(months_postdoc ~ specifics, tmSpec, median)
       colnames(time.spc)[colnames(time.spc)=="months_postdoc"] <- "Median_time"
-      time.spc$spc_num = as.numeric(time.spc$specifics)
       p <- ggplot(tmSpec, aes(x = specifics, y = months_postdoc, fill = specifics)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.spc, aes(label=round(Median_time,1), x=spc_num+0.4, y = Median_time))
+      p <- p + coord_flip() + geom_text(data=time.spc, aes(label=round(Median_time,1), y = Median_time), color="white")
       p <- p + scale_fill_manual(values=colorJSpec)
     }
     else if (input$selectTmTp == 'Trend') {
       tmSpec <- dataGroup
       time.spc = aggregate(months_postdoc ~ years + specifics, tmSpec, median)
       colnames(time.spc)[colnames(time.spc)=="months_postdoc"] <- "Median_time"
-      time.spc$spc_num = as.numeric(time.spc$specifics)
       p <- ggplot(tmSpec, aes(x = years, y = months_postdoc, fill = years)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.spc, aes(label=round(Median_time,1), x=spc_num+0.4, y = Median_time))
+      p <- p + coord_flip() + geom_text(data=time.spc, aes(label=round(Median_time,1), y = Median_time), color="white")
       p <- p + facet_grid(specifics ~ .)
       p <- p + theme(strip.text.y = element_text(size=10, face="bold"))
     }
@@ -2043,20 +2082,23 @@ function(input, output, session) {
       tmSpec <- dataGroup[dataGroup$years == timeConvert(input$selectTmTp), ]
       time.spc = aggregate(months_postdoc ~ specifics, tmSpec, median)
       colnames(time.spc)[colnames(time.spc)=="months_postdoc"] <- "Median_time"
-      time.spc$spc_num = as.numeric(time.spc$specifics)
       p <- ggplot(tmSpec, aes(x = specifics, y = months_postdoc, fill = specifics)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.spc, aes(label=round(Median_time,1), x=spc_num+0.4, y = Median_time))
+      p <- p + coord_flip() + geom_text(data=time.spc, aes(label=round(Median_time,1), y = Median_time), color="white")
       p <- p + scale_fill_manual(values=colorJSpec)
     }
     p <- p + ggtitle("Training Time (months)") + theme(legend.position="none") +
+      # labs(y='Months', x='Job Specifics')
       labs(y='Months', x='')
-    gp <- ggplotly(p, width = input$sldWidthTm, height = input$sldHeightTm, tooltip=c("Median_time"))
+    # ggp_build <- plotly_build(p)
+    # ggp_build$layout$height = input$sldHeightTm
+    # ggp_build$layout$width = input$sldWidthTm - 10
+    gp <- ggplotly(p, width = input$sldWidthTm, height = input$sldHeightTm, tooltip=c("x", "Median_time"))
     gp # %>% layout(margin = list(l = 75))
   })
   
   output$tmSpecTxt  <- renderText({
     slctYear <- timeConvert(input$selectTmTp)
-    if (input$selectTmTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectTmTp == 'Whole time (2000-2019)') {
       tmData = dataGroup
     }
     else {
@@ -2073,7 +2115,7 @@ function(input, output, session) {
   # training time job specifics table
   output$tmSpecTable <- renderTable({
     # choose data based on input$selectTmTp from ui.R
-    if (input$selectTmTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectTmTp == 'Whole time (2000-2019)') {
       tmSpec <- changeTableHeader(dfTimeSpecAll,c('Job_Specifics','Avg_Time','Min_Time','Max_Time','Alumni_Count'))
     }
     else if (input$selectTmTp == 'Trend') {
@@ -2087,27 +2129,23 @@ function(input, output, session) {
   })  
   
   # https://stackoverflow.com/questions/19440069/ggplot2-facet-wrap-strip-color-based-on-variable-in-data-set
-  # https://stats.stackexchange.com/questions/8206/labeling-boxplots-in-r
-  # https://stackoverflow.com/questions/32342616/ggplot-increase-distance-between-boxplots
   # training time gender plot
   output$tmGndrPlot <- renderPlotly({
     # choose data based on input$selectTmTp from ui.R
-    if (input$selectTmTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectTmTp == 'Whole time (2000-2019)') {
       tmGndr <- dataGroup
       time.gnd = aggregate(months_postdoc ~ gender, tmGndr, median)
       colnames(time.gnd)[colnames(time.gnd)=="months_postdoc"] <- "Median_time"
-      time.gnd$g_num = as.numeric(time.gnd$gender)
       p <- ggplot(tmGndr, aes(x = gender, y = months_postdoc, fill = gender)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.gnd, aes(label=round(Median_time,1), x=g_num+0.3, y = Median_time))
+      p <- p + coord_flip() + geom_text(data=time.gnd, aes(label=round(Median_time,1), y = Median_time), color="white")
       p <- p + scale_fill_manual(values=genderColors)
     }
     else if (input$selectTmTp == 'Trend') {
       tmGndr <- dataGroup
       time.gnd = aggregate(months_postdoc ~ years + gender, tmGndr, median)
       colnames(time.gnd)[colnames(time.gnd)=="months_postdoc"] <- "Median_time"
-      time.gnd$g_num = as.numeric(time.gnd$gender)
       p <- ggplot(tmGndr, aes(x = years, y = months_postdoc, fill = years)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.gnd, aes(label=round(Median_time,1), x=g_num+0.3, y = Median_time))
+      p <- p + coord_flip() + geom_text(data=time.gnd, aes(label=round(Median_time,1), y = Median_time), color="white")
       p <- p + facet_grid(gender ~ .)
       p <- p + theme(strip.text.y = element_text(size=10, face="bold"))
     }
@@ -2115,20 +2153,23 @@ function(input, output, session) {
       tmGndr <- dataGroup[dataGroup$years == timeConvert(input$selectTmTp), ]
       time.gnd = aggregate(months_postdoc ~ gender, tmGndr, median)
       colnames(time.gnd)[colnames(time.gnd)=="months_postdoc"] <- "Median_time"
-      time.gnd$g_num = as.numeric(time.gnd$gender)
       p <- ggplot(tmGndr, aes(x = gender, y = months_postdoc, fill = gender)) + geom_boxplot()
-      p <- p + coord_flip() + geom_text(data=time.gnd, aes(label=round(Median_time,1), x=g_num+0.3, y = Median_time))
+      p <- p + coord_flip() + geom_text(data=time.gnd, aes(label=round(Median_time,1), y = Median_time), color="white")
       p <- p + scale_fill_manual(values=genderColors)
     }
     p <- p + ggtitle("Training Time (months)") + theme(legend.position="none") +
+      # labs(y='Months', x='Gender')
       labs(y='Months', x='')
-    gp <- ggplotly(p, width = input$sldWidthTm, height = input$sldHeightTm, tooltip=c("Median_time"))
+    # ggp_build <- plotly_build(p)
+    # ggp_build$layout$height = input$sldHeightTm
+    # ggp_build$layout$width = input$sldWidthTm - 10
+    gp <- ggplotly(p, width = input$sldWidthTm, height = input$sldHeightTm, tooltip=c("x", "Median_time"))
     gp %>% layout(margin = list(l = 75))
   })
   
   output$tmGndrTxt  <- renderText({
     slctYear <- timeConvert(input$selectTmTp)
-    if (input$selectTmTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectTmTp == 'Whole time (2000-2019)') {
       tmData = dataGroup
     }
     else {
@@ -2152,7 +2193,7 @@ function(input, output, session) {
   # training time gender table
   output$tmGndrTable <- renderTable({
     # choose data based on input$selectTmTp from ui.R
-    if (input$selectTmTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectTmTp == 'Whole time (2000-2019)') {
       tmGndr <- changeTableHeader(gendTimeAll,c('Gender','Avg_Time','Min_Time','Max_Time','Alumni_Count'))
     }
     else if (input$selectTmTp == 'Trend') {
@@ -2173,7 +2214,7 @@ function(input, output, session) {
           title = "Training time (Job sector)", width = 12,
           # The id lets us use input$tab_tmSect on the server to find the current tab
           id = "tab_tmSect",
-          tabPanel("Box plot", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("tmSectTxt"), plotlyOutput("tmSectPlot")),
+          tabPanel("Box plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("tmSectTxt"), plotlyOutput("tmSectPlot")),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("tmSectTable"))
         )
       )
@@ -2185,7 +2226,7 @@ function(input, output, session) {
           title = "Training time (Job type)", width = 12,
           # The id lets us use input$tab_tmType on the server to find the current tab
           id = "tab_tmType",
-          tabPanel("Box plot", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("tmTypeTxt"), plotlyOutput("tmTypePlot", height=input$sldHeightTm)),
+          tabPanel("Box plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("tmTypeTxt"), plotlyOutput("tmTypePlot", height=input$sldHeightTm)),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("tmTypeTable"))
         )
       )
@@ -2197,7 +2238,7 @@ function(input, output, session) {
           title = "Training time (Job specifics)", width = 12,
           # The id lets us use input$tab_tmSpec on the server to find the current tab
           id = "tab_tmSpec",
-          tabPanel("Box plot", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("tmSpecTxt"), plotlyOutput("tmSpecPlot")),
+          tabPanel("Box plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("tmSpecTxt"), plotlyOutput("tmSpecPlot")),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("tmSpecTable"))
         )
       )
@@ -2209,7 +2250,7 @@ function(input, output, session) {
           title = "Training time (Gender differences)", width = 12,
           # The id lets us use input$tab_tmGndr on the server to find the current tab
           id = "tab_tmGndr",
-          tabPanel("Box plot", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("tmGndrTxt"), plotlyOutput("tmGndrPlot")),
+          tabPanel("Box plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("tmGndrTxt"), plotlyOutput("tmGndrPlot")),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("tmGndrTable"))
         )
       )
@@ -2285,7 +2326,7 @@ function(input, output, session) {
   # job category plot for top countries
   output$cntrJobPlot <- renderPlot({
     # choose data based on input$selectCtTp from ui.R
-    if (input$selectCtTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectCtTp == 'Whole time (2000-2019)') {
       topData = ctryData
     }
     else {
@@ -2317,6 +2358,8 @@ function(input, output, session) {
       ccSct1$country_origin <- as.character(ccSct1$country_origin)
       ccSct1$country_origin <- paste(ccSct1$country_origin, paste0("N=",ccSct1$catcnt), sep="\n")
       ccSct1$country_origin <- factor(ccSct1$country_origin)
+      # (1/13/21)
+      labSct1 <- subset(ccSct1, job_sector == topSect)
       
       p1 <- ggplot(ccSct1,aes(x=country_origin,y=job_sector)) +
         geom_point(aes(size=percent,color=job_sector))+
@@ -2325,7 +2368,7 @@ function(input, output, session) {
               panel.grid.major.x = element_line(colour = "gray", linetype="solid"),
               panel.grid.major.y = element_line(colour = "gray", linetype="dashed"),
               axis.text = element_text(size=11))
-      p1 <- p1 + geom_text(aes(x=country_origin,y=job_sector,label=lab))
+      p1 <- p1 + geom_label(data=labSct1, aes(x=country_origin,y=job_sector,label=lab))
       p1 <- p1 + scale_color_manual(values=c("Academic institution"="#04E0E8",
                                            "For-profit company"="#295A29",
                                            "Government agency"= "#61D661",
@@ -2349,6 +2392,8 @@ function(input, output, session) {
       ccJtp1$country_origin <- as.character(ccJtp1$country_origin)
       ccJtp1$country_origin <- paste(ccJtp1$country_origin, paste0("N=",ccJtp1$catcnt), sep="\n")
       ccJtp1$country_origin <- factor(ccJtp1$country_origin)
+      # (1/13/21)
+      labJtp1 <- subset(ccJtp1, job_type == topType)
       
       p1 <- ggplot(ccJtp1,aes(x=country_origin,y=job_type)) +
         geom_point(aes(size=percent,color=job_type))+
@@ -2357,7 +2402,7 @@ function(input, output, session) {
               panel.grid.major.x = element_line(colour = "gray", linetype="solid"),
               panel.grid.major.y = element_line(colour = "gray", linetype="dashed"),
               axis.text = element_text(size=11))
-      p1 <- p1 + geom_text(aes(x=country_origin,y=job_type,label=lab))
+      p1 <- p1 + geom_label(data=labJtp1, aes(x=country_origin,y=job_type,label=lab))
       p1 <- p1 + scale_color_manual(values=c("Professional staff"="#04E0E8",
                                            "Management"="#295A29",
                                            "Tenure track faculty"= "#61D661",
@@ -2382,6 +2427,8 @@ function(input, output, session) {
       ccSpc1$country_origin <- as.character(ccSpc1$country_origin)
       ccSpc1$country_origin <- paste(ccSpc1$country_origin, paste0("N=",ccSpc1$catcnt), sep="\n")
       ccSpc1$country_origin <- factor(ccSpc1$country_origin)
+      # (1/13/21)
+      labSpc1 <- subset(ccSpc1, specifics == topSpec)
       
       p1 <- ggplot(ccSpc1,aes(x=country_origin,y=specifics)) +
         geom_point(aes(size=percent,color=specifics))+
@@ -2390,7 +2437,7 @@ function(input, output, session) {
               panel.grid.major.x = element_line(colour = "gray", linetype="solid"),
               panel.grid.major.y = element_line(colour = "gray", linetype="dashed"),
               axis.text = element_text(size=11))
-      p1 <- p1 + geom_text(aes(x=country_origin,y=specifics,label=lab))
+      p1 <- p1 + geom_label(data=labSpc1,aes(x=country_origin,y=specifics,label=lab))
       p1 <- p1 + scale_color_manual(values=c("Science writing or communications"="#21327A",
                                            "Primarily applied research"="#97A9F5",
                                            "REST COMBINED"= "#483A77",
@@ -2402,7 +2449,7 @@ function(input, output, session) {
                                            "Primarily teaching"="#04E0E8",
                                            "Primarily applied research"="#295A4C",
                                            "Primarily basic research" = "#6C3A77",
-                                           "Additional postdoc" = "#892F73" , 
+                                           "Additional postdoctoral training" = "#892F73" , 
                                            "Unknown or Undecided"="#E461C4"), guide = FALSE)
       # p1 <- p1 + labs(x="Country of Origin", y= "Job Specifics")
       p1 <- p1 + labs(x="Country of Origin", y= "")
@@ -2442,7 +2489,7 @@ function(input, output, session) {
   # job category data table for top countries
   output$cntrJobTable <- renderTable({
     # choose data based on input$selectCtTp from ui.R
-    if (input$selectCtTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectCtTp == 'Whole time (2000-2019)') {
       topData = ctryData
     }
     else {
@@ -2469,7 +2516,7 @@ function(input, output, session) {
   # training time plot for top countries
   output$cntrTimePlot <- renderPlot({
     # choose data based on input$selectCtTp from ui.R
-    if (input$selectCtTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectCtTp == 'Whole time (2000-2019)') {
       topData = ctryData
     }
     else {
@@ -2505,7 +2552,7 @@ function(input, output, session) {
       ccMntAll$country_origin <- as.character(ccMntAll$country_origin)
       ccMntAll$country_origin <- paste(ccMntAll$country_origin, paste0("N=",ccMntAll$catcnt), sep="\n")
       ccMntAll$country_origin <- factor(ccMntAll$country_origin)
-      # (3/27/18)
+      # (1/13/21)
       labMnt <- subset(ccMntAll, job_sector == topSect)
       
       p2 <- ggplot(ccMntAll,aes(x=country_origin,y=job_sector)) +
@@ -2540,8 +2587,9 @@ function(input, output, session) {
       ccMntAll$country_origin <- as.character(ccMntAll$country_origin)
       ccMntAll$country_origin <- paste(ccMntAll$country_origin, paste0("N=",ccMntAll$catcnt), sep="\n")
       ccMntAll$country_origin <- factor(ccMntAll$country_origin)
-      # (3/27/18)
+      # (1/13/21)
       labMnt <- subset(ccMntAll, job_type == topType)
+      
       
       p2 <- ggplot(ccMntAll,aes(x=country_origin,y=job_type)) +
         geom_point(aes(size=percent,fill=months_postdoc),alpha=0.9,color="gray48",shape=21) +
@@ -2550,7 +2598,7 @@ function(input, output, session) {
               panel.grid.major.x = element_line(colour = "gray", linetype="solid"),
               panel.grid.major.y = element_line(colour = "gray", linetype="dashed"),
               axis.text = element_text(size=11))
-      p2 <- p2 + geom_label(data=labMnt, aes(x=country_origin,y=job_type,label=lab))
+      p2 <- p2 + geom_label(data=labMnt,aes(x=country_origin,y=job_type,label=lab))
       p2 <- p2 + scale_fill_gradient2(name="Mean Training\nTime (months)", low="green",mid="purple", high="orange", midpoint=40)
       # p2 <- p2 + labs(x="Country of Origin", y= "Job Type")
       p2 <- p2 + labs(x="Country of Origin", y= "")
@@ -2575,7 +2623,7 @@ function(input, output, session) {
       ccMntAll$country_origin <- as.character(ccMntAll$country_origin)
       ccMntAll$country_origin <- paste(ccMntAll$country_origin, paste0("N=",ccMntAll$catcnt), sep="\n")
       ccMntAll$country_origin <- factor(ccMntAll$country_origin)
-      # (3/27/18)
+      # (1/13/21)
       labMnt <- subset(ccMntAll, specifics == topSpec)
       
       p2 <- ggplot(ccMntAll,aes(x=country_origin,y=specifics)) +
@@ -2585,7 +2633,7 @@ function(input, output, session) {
               panel.grid.major.x = element_line(colour = "gray", linetype="solid"),
               panel.grid.major.y = element_line(colour = "gray", linetype="dashed"),
               axis.text = element_text(size=11))
-      p2 <- p2 + geom_label(data=labMnt, aes(x=country_origin,y=specifics,label=lab))
+      p2 <- p2 + geom_label(data=labMnt,aes(x=country_origin,y=specifics,label=lab))
       p2 <- p2 + scale_fill_gradient2(name="Mean Training\nTime (months)", low="green",mid="purple", high="orange", midpoint=40)
       # p2 <- p2 + labs(x="Country of Origin", y= "Job Specifics")
       p2 <- p2 + labs(x="Country of Origin", y= "")
@@ -2627,7 +2675,7 @@ function(input, output, session) {
   # training time data table for top countries
   output$cntrTimeTable <- renderTable({
     # choose data based on input$selectCtTp from ui.R
-    if (input$selectCtTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectCtTp == 'Whole time (2000-2019)') {
       topData = ctryData
     }
     else {
@@ -2667,7 +2715,7 @@ function(input, output, session) {
   # gender plot for top countries
   output$cntrGenderPlot <- renderPlot({
     # choose data based on input$selectCtTp from ui.R
-    if (input$selectCtTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectCtTp == 'Whole time (2000-2019)') {
       topData = ctryData
     }
     else {
@@ -2707,8 +2755,9 @@ function(input, output, session) {
       ccGenAll$country_origin <- as.character(ccGenAll$country_origin)
       ccGenAll$country_origin <- paste(ccGenAll$country_origin, paste0("N=",ccGenAll$catcnt), sep="\n")
       ccGenAll$country_origin <- factor(ccGenAll$country_origin)
-      # (3/27/18)
+      # (1/13/21)
       labGen <- subset(ccGenAll, job_sector == topSect)
+      
       
       p3 <- ggplot(ccGenAll,aes(x=country_origin,y=job_sector)) +
         geom_point(aes(size=percent,fill=mpct),alpha=0.9,color="gray48",shape=21) +
@@ -2746,7 +2795,7 @@ function(input, output, session) {
       ccGenAll$country_origin <- as.character(ccGenAll$country_origin)
       ccGenAll$country_origin <- paste(ccGenAll$country_origin, paste0("N=",ccGenAll$catcnt), sep="\n")
       ccGenAll$country_origin <- factor(ccGenAll$country_origin)
-      # (3/27/18)
+      # (1/13/21)
       labGen <- subset(ccGenAll, job_type == topType)
       
       p3 <- ggplot(ccGenAll,aes(x=country_origin,y=job_type)) +
@@ -2785,7 +2834,7 @@ function(input, output, session) {
       ccGenAll$country_origin <- as.character(ccGenAll$country_origin)
       ccGenAll$country_origin <- paste(ccGenAll$country_origin, paste0("N=",ccGenAll$catcnt), sep="\n")
       ccGenAll$country_origin <- factor(ccGenAll$country_origin)
-      # (3/27/18)
+      # (1/13/21)
       labGen <- subset(ccGenAll, specifics == topSpec)
       
       p3 <- ggplot(ccGenAll,aes(x=country_origin,y=specifics)) +
@@ -2837,7 +2886,7 @@ function(input, output, session) {
   # gender data table for top countries
   output$cntrGenderTable <- renderTable({
     # choose data based on input$selectCtTp from ui.R
-    if (input$selectCtTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectCtTp == 'Whole time (2000-2019)') {
       topData = ctryData
     }
     else {
@@ -2904,7 +2953,7 @@ function(input, output, session) {
   # job location plot for top countries
   output$cntrLocationPlot <- renderPlot({
     # choose data based on input$selectCtTp from ui.R
-    if (input$selectCtTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectCtTp == 'Whole time (2000-2019)') {
       topData = ctryData
     }
     else {
@@ -2948,7 +2997,7 @@ function(input, output, session) {
       ccLocAll$country_origin <- as.character(ccLocAll$country_origin)
       ccLocAll$country_origin <- paste(ccLocAll$country_origin, paste0("N=",ccLocAll$catcnt), sep="\n")
       ccLocAll$country_origin <- factor(ccLocAll$country_origin)
-      # (3/27/18)
+      # (1/13/21)
       labLoc <- subset(ccLocAll, job_sector == topSect)
       
       p4 <- ggplot(ccLocAll,aes(x=country_origin,y=job_sector)) +
@@ -2991,7 +3040,7 @@ function(input, output, session) {
       ccLocAll$country_origin <- as.character(ccLocAll$country_origin)
       ccLocAll$country_origin <- paste(ccLocAll$country_origin, paste0("N=",ccLocAll$catcnt), sep="\n")
       ccLocAll$country_origin <- factor(ccLocAll$country_origin)
-      # (3/27/18)
+      # (1/13/21)
       labLoc <- subset(ccLocAll, job_type == topType)
       
       p4 <- ggplot(ccLocAll,aes(x=country_origin,y=job_type)) +
@@ -3034,7 +3083,7 @@ function(input, output, session) {
       ccLocAll$country_origin <- as.character(ccLocAll$country_origin)
       ccLocAll$country_origin <- paste(ccLocAll$country_origin, paste0("N=",ccLocAll$catcnt), sep="\n")
       ccLocAll$country_origin <- factor(ccLocAll$country_origin)
-      # (3/27/18)
+      # (1/13/21)
       labLoc <- subset(ccLocAll, specifics == topSpec)
       
       p4 <- ggplot(ccLocAll,aes(x=country_origin,y=specifics)) +
@@ -3082,11 +3131,11 @@ function(input, output, session) {
            Percentages shown as text indicate the relative percentage of those working in the US within the total selected job specifics.</p><p>&nbsp;</p>")
     }
   })
-
+  
   # job location data table for top countries
   output$cntrLocationTable <- renderTable({
     # choose data based on input$selectCtTp from ui.R
-    if (input$selectCtTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectCtTp == 'Whole time (2000-2019)') {
       topData = ctryData
     }
     else {
@@ -3171,7 +3220,7 @@ function(input, output, session) {
           title = "Job category", width = 12,
           # The id lets us use input$ctJob on the server to find the current tab
           id = "tab_ctJob",
-          tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("cntrJobTxt"), plotOutput("cntrJobPlot")),
+          tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("cntrJobTxt"), plotOutput("cntrJobPlot")),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("cntrJobTable"))
         )
       )
@@ -3183,7 +3232,7 @@ function(input, output, session) {
           title = "Training time", width = 12,
           # The id lets us use input$tab_ctTime on the server to find the current tab
           id = "tab_ctTime",
-          tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("cntrTimeTxt"), plotOutput("cntrTimePlot")),
+          tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("cntrTimeTxt"), plotOutput("cntrTimePlot")),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("cntrTimeTable"))
         )
       )
@@ -3195,7 +3244,7 @@ function(input, output, session) {
           title = "Gender", width = 12,
           # The id lets us use input$tab_ctGender on the server to find the current tab
           id = "tab_ctGender",
-          tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("cntrGenderTxt"), plotOutput("cntrGenderPlot")),
+          tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("cntrGenderTxt"), plotOutput("cntrGenderPlot")),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("cntrGenderTable"))
         )
       )
@@ -3207,7 +3256,7 @@ function(input, output, session) {
           title = "Location", width = 12,
           # The id lets us use input$tab_ctLocation on the server to find the current tab
           id = "tab_ctLocation",
-          tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("cntrLocationTxt"), plotOutput("cntrLocationPlot")),
+          tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("cntrLocationTxt"), plotOutput("cntrLocationPlot")),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("cntrLocationTable"))
         )
       )
@@ -3220,14 +3269,14 @@ function(input, output, session) {
             title = "Job category", width = 6,
             # The id lets us use input$ctJobSml on the server to find the current tab
             id = "tab_ctJobSml",
-            tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("cntrJobTxt"), plotOutput("cntrJobPlot")),
+            tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("cntrJobTxt"), plotOutput("cntrJobPlot")),
             tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("cntrJobTable"))
           ),
           tabBox(
             title = "Training time", width = 6,
             # The id lets us use input$ctTimeSml on the server to find the current tab
             id = "tab_ctTimeSml",
-            tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("cntrTimeTxt"), plotOutput("cntrTimePlot")),
+            tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("cntrTimeTxt"), plotOutput("cntrTimePlot")),
             tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("cntrTimeTable"))
           )
         ),
@@ -3236,14 +3285,14 @@ function(input, output, session) {
             title = "Gender", width = 6,
             # The id lets us use input$tab_ctGenderSml on the server to find the current tab
             id = "tab_ctGenderSml",
-            tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("cntrGenderTxt"), plotOutput("cntrGenderPlot")),
+            tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("cntrGenderTxt"), plotOutput("cntrGenderPlot")),
             tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("cntrGenderTable"))
           ),
           tabBox(
             title = "Location", width = 6,
             # The id lets us use input$ctLocationSml on the server to find the current tab
             id = "tab_ctLocationSml",
-            tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("cntrLocationTxt"), plotOutput("cntrLocationPlot")),
+            tabPanel("Bubble plot", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("cntrLocationTxt"), plotOutput("cntrLocationPlot")),
             tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("cntrLocationTable"))
           )
         )
@@ -3253,7 +3302,7 @@ function(input, output, session) {
   
   # top countries information boxes
   output$cntrInfoBox<-renderUI({
-    if (input$selectCtTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectCtTp == 'Whole time (2000-2019)') {
       topData = dataGroup
     }
     else {
@@ -3277,6 +3326,7 @@ function(input, output, session) {
       # gender freq
       ccGenAll$mpct <- ccGenAll$gcnt/ccGenAll$cnt
       ccGenAll$mpct <- ifelse(ccGenAll$gender%in%"Male",ccGenAll$mpct,1-ccGenAll$mpct)
+      ccGenAll$mpct <- round(ccGenAll$mpct, 5)
       
       # location in US or not
       clocData <- topData
@@ -3288,12 +3338,13 @@ function(input, output, session) {
       # location freq
       ccLocAll$upct <- ccLocAll$lcnt/ccLocAll$cnt
       ccLocAll$upct <- ifelse(ccLocAll$loc == "US",ccLocAll$upct,1-ccLocAll$upct)
+      ccLocAll$upct <- round(ccLocAll$upct, 5)
       
       boxData = list(paste0("Sector: '",topSect,"'"),
-                     ccSctAll$percent[ccSctAll$job_sector==topSect],
-                     ccMntAll$months_postdoc[ccMntAll$job_sector==topSect],
-                     ccGenAll$mpct[ccGenAll$job_sector==topSect],
-                     ccLocAll$upct[ccLocAll$job_sector==topSect])
+                     unique(ccSctAll$percent[ccSctAll$job_sector==topSect]),
+                     unique(ccMntAll$months_postdoc[ccMntAll$job_sector==topSect]),
+                     unique(ccGenAll$mpct[ccGenAll$job_sector==topSect]),
+                     unique(ccLocAll$upct[ccLocAll$job_sector==topSect]))
     }
     else if (input$selectCtPc == 2) {
       ccSctAll <- topData %>% group_by(job_type) %>% summarise (cnt = n()) %>% mutate(percent=cnt/sum(cnt))
@@ -3312,6 +3363,7 @@ function(input, output, session) {
       # gender freq
       ccGenAll$mpct <- ccGenAll$gcnt/ccGenAll$cnt
       ccGenAll$mpct <- ifelse(ccGenAll$gender%in%"Male",ccGenAll$mpct,1-ccGenAll$mpct)
+      ccGenAll$mpct <- round(ccGenAll$mpct, 5)
       
       # location in US or not
       clocData <- topData
@@ -3323,12 +3375,13 @@ function(input, output, session) {
       # location freq
       ccLocAll$upct <- ccLocAll$lcnt/ccLocAll$cnt
       ccLocAll$upct <- ifelse(ccLocAll$loc == "US",ccLocAll$upct,1-ccLocAll$upct)
+      ccLocAll$upct <- round(ccLocAll$upct, 5)
 
       boxData = list(paste0("Type: '",topType,"'"),
-                     ccSctAll$percent[ccSctAll$job_type==topType],
-                     ccMntAll$months_postdoc[ccMntAll$job_type==topType],
-                     ccGenAll$mpct[ccGenAll$job_type==topType],
-                     ccLocAll$upct[ccLocAll$job_type==topType])
+                     unique(ccSctAll$percent[ccSctAll$job_type==topType]),
+                     unique(ccMntAll$months_postdoc[ccMntAll$job_type==topType]),
+                     unique(ccGenAll$mpct[ccGenAll$job_type==topType]),
+                     unique(ccLocAll$upct[ccLocAll$job_type==topType]))
     }
     else {
       ccSctAll <- topData %>% group_by(specifics) %>% summarise (cnt = n()) %>% mutate(percent=cnt/sum(cnt))
@@ -3347,6 +3400,7 @@ function(input, output, session) {
       # gender freq
       ccGenAll$mpct <- ccGenAll$gcnt/ccGenAll$cnt
       ccGenAll$mpct <- ifelse(ccGenAll$gender%in%"Male",ccGenAll$mpct,1-ccGenAll$mpct)
+      ccGenAll$mpct <- round(ccGenAll$mpct, 5)
       
       # location in US or not
       clocData <- topData
@@ -3358,12 +3412,13 @@ function(input, output, session) {
       # location freq
       ccLocAll$upct <- ccLocAll$lcnt/ccLocAll$cnt
       ccLocAll$upct <- ifelse(ccLocAll$loc == "US",ccLocAll$upct,1-ccLocAll$upct)
+      ccLocAll$upct <- round(ccLocAll$upct, 5)
 
       boxData = list(paste0("Specifics: '", topSpec, "'"),
-                     ccSctAll$percent[ccSctAll$specifics==topSpec],
-                     ccMntAll$months_postdoc[ccMntAll$specifics==topSpec],
-                     ccGenAll$mpct[ccGenAll$specifics==topSpec],
-                     ccLocAll$upct[ccLocAll$specifics==topSpec])
+                     unique(ccSctAll$percent[ccSctAll$specifics==topSpec]),
+                     unique(ccMntAll$months_postdoc[ccMntAll$specifics==topSpec]),
+                     unique(ccGenAll$mpct[ccGenAll$specifics==topSpec]),
+                     unique(ccLocAll$upct[ccLocAll$specifics==topSpec]))
     }
     
 
@@ -3401,7 +3456,7 @@ function(input, output, session) {
   
   # job sector plot for study degree fields
   output$degrJSectPlot <- renderPlot({
-    if (input$selectDgTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectDgTp == 'Whole time (2000-2019)') {
       degrData = dataGroup
     }
     else {
@@ -3420,7 +3475,7 @@ function(input, output, session) {
     
     dgcTypeAll <- degrData %>% group_by(degree_category, job_sector) %>% summarise (cnt = n()) %>% mutate(freq=cnt/sum(cnt))
     degrType <- dgcTypeAll %>% group_by(degree_category) %>% mutate(catcnt=sum(cnt))
-    if (input$selectDgTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectDgTp == 'Whole time (2000-2019)') {
       degrType <- subset(degrType, catcnt >= 10)
     }
     else {
@@ -3456,13 +3511,13 @@ function(input, output, session) {
   },height=dgHeight,width=dgWidth)
   output$degrJSectTxt  <- renderText({HTML("<p><strong>Percentage of Alumni that Enter into Academic Institution Positions Based on Their Doctoral Degree Field</strong> 
                                            Alumni doctoral degree fields were standardized according to the main program groups defined within NCES' Biological and Biomedical Sciences instructional programs. 
-                                           The relative percentage of alumni within each degree field entering into academic institute positions is shown. 
+                                           The relative percentage of alumni within each degree field entering into academic insitute positions is shown. 
                                            The 95% confidence intervals for the binomial proportion are shown here.
                                            *, the main NCES program group is ‘<i>Biomathematics, Bioinformatics, and Computational Biology</i>;’ ‘<i>Biostatistics</i>’ was substituted for <i>‘Biomathematics’ and ‘Bioinformatics’</i> within the title because nearly all alumni in this category possessed a degree in statistics or biostatistics.</p><p>&nbsp;</p>")})
   
   # job sector data table for study degree fields
   output$degrJSectTable <- renderTable({
-    if (input$selectDgTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectDgTp == 'Whole time (2000-2019)') {
       degrData = dataGroup
     }
     else {
@@ -3476,7 +3531,7 @@ function(input, output, session) {
   
   # job type plot for study degree fields
   output$degrJTypePlot <- renderPlot({
-    if (input$selectDgTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectDgTp == 'Whole time (2000-2019)') {
       degrData = dataGroup
     }
     else {
@@ -3494,7 +3549,7 @@ function(input, output, session) {
     
     dgcTypeAll <- degrData %>% group_by(degree_category, job_type) %>% summarise (cnt = n()) %>% mutate(freq=cnt/sum(cnt))
     degrType <- dgcTypeAll %>% group_by(degree_category) %>% mutate(catcnt=sum(cnt))
-    if (input$selectDgTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectDgTp == 'Whole time (2000-2019)') {
       degrType <- subset(degrType, catcnt >= 10)
     }
     else {
@@ -3536,7 +3591,7 @@ function(input, output, session) {
   
   # job type data table for study degree fields
   output$degrJTypeTable <- renderTable({
-    if (input$selectDgTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectDgTp == 'Whole time (2000-2019)') {
       degrData = dataGroup
     }
     else {
@@ -3550,7 +3605,7 @@ function(input, output, session) {
   
   # job specifics plot for study degree fields
   output$degrJSpecPlot <- renderPlot({
-    if (input$selectDgTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectDgTp == 'Whole time (2000-2019)') {
       degrData = dataGroup
     }
     else {
@@ -3568,7 +3623,7 @@ function(input, output, session) {
     
     dgcTypeAll <- degrData %>% group_by(degree_category, specifics) %>% summarise (cnt = n()) %>% mutate(freq=cnt/sum(cnt))
     degrType <- dgcTypeAll %>% group_by(degree_category) %>% mutate(catcnt=sum(cnt))
-    if (input$selectDgTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectDgTp == 'Whole time (2000-2019)') {
       degrType <- subset(degrType, catcnt >= 10)
     }
     else {
@@ -3611,7 +3666,7 @@ function(input, output, session) {
   
   # job specifics data table for study degree fields
   output$degrJSpecTable <- renderTable({
-    if (input$selectDgTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectDgTp == 'Whole time (2000-2019)') {
       degrData = dataGroup
     }
     else {
@@ -3632,7 +3687,7 @@ function(input, output, session) {
           title = "Job sector", width = 12,
           # The id lets us use input$tab_dgSect on the server to find the current tab
           id = "tab_dgSect",
-          tabPanel("Pointrange plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("degrJSectTxt"), plotOutput("degrJSectPlot")),
+          tabPanel("Pointrange plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("degrJSectTxt"), plotOutput("degrJSectPlot")),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("degrJSectTable"))
         )
       )
@@ -3644,7 +3699,7 @@ function(input, output, session) {
           title = "Job type", width = 12,
           # The id lets us use input$tab_dgType on the server to find the current tab
           id = "tab_dgType",
-          tabPanel("Pointrange plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("degrJTypeTxt"), plotOutput("degrJTypePlot")),
+          tabPanel("Pointrange plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("degrJTypeTxt"), plotOutput("degrJTypePlot")),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("degrJTypeTable"))
         )
       )
@@ -3656,7 +3711,7 @@ function(input, output, session) {
           title = "Job specifics", width = 12,
           # The id lets us use input$tab_dgSpec on the server to find the current tab
           id = "tab_dgSpec",
-          tabPanel("Pointrange plot", style = "overflow-x:scroll; overflow-y:scroll; height: 700px", htmlOutput("degrJSpecTxt"), plotOutput("degrJSpecPlot")),
+          tabPanel("Pointrange plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1200px", htmlOutput("degrJSpecTxt"), plotOutput("degrJSpecPlot")),
           tabPanel("Data table", style = "overflow-x:scroll; overflow-y:scroll; max-height: 400px", tableOutput("degrJSpecTable"))
         )
       )
@@ -3695,7 +3750,7 @@ function(input, output, session) {
   
   # degree study field information boxes
   output$degrInfoBox<-renderUI({
-    if (input$selectDgTp == 'Left NIEHS in 2000-2014') {
+    if (input$selectDgTp == 'Whole time (2000-2019)') {
       dgrData = dataGroup
     }
     else {
@@ -3704,18 +3759,21 @@ function(input, output, session) {
     
     ccSctAll <- dgrData %>% group_by(job_sector) %>% summarise (cnt = n()) %>% mutate(percent=cnt/sum(cnt))
     # topSect <- ccSctAll$job_sector[ccSctAll$cnt == max(ccSctAll$cnt)]
+    # topSectPct <- ccSctAll$percent[ccSctAll$cnt == max(ccSctAll$cnt)]
     topSect <- 'Academic institution'
-    topSectPct <- ccSctAll$percent[ccSctAll$cnt == max(ccSctAll$cnt)]
+    topSectPct <- ccSctAll$percent[ccSctAll$job_sector == topSect]
       
     ccTypAll <- dgrData %>% group_by(job_type) %>% summarise (cnt = n()) %>% mutate(percent=cnt/sum(cnt))
     # topType <- ccTypAll$job_type[ccTypAll$cnt == max(ccTypAll$cnt)]
+    # topTypePct <- ccTypAll$percent[ccTypAll$cnt == max(ccTypAll$cnt)]
     topType <- 'Tenure track faculty'
-    topTypePct <- ccTypAll$percent[ccTypAll$cnt == max(ccTypAll$cnt)]
+    topTypePct <- ccTypAll$percent[ccTypAll$job_type == topType]
 
     ccSpcAll <- dgrData %>% group_by(specifics) %>% summarise (cnt = n()) %>% mutate(percent=cnt/sum(cnt))
     # topSpec <- ccSpcAll$specifics[ccSpcAll$cnt == max(ccSpcAll$cnt)]
+    # topSpecPct <- ccSpcAll$percent[ccSpcAll$cnt == max(ccSpcAll$cnt)]
     topSpec <- 'Primarily basic research'
-    topSpecPct <- ccSpcAll$percent[ccSpcAll$cnt == max(ccSpcAll$cnt)]
+    topSpecPct <- ccSpcAll$percent[ccSpcAll$specifics == topSpec]
 
     box(title = "General distribution of selected job category",
         width = 12,
@@ -3727,6 +3785,831 @@ function(input, output, session) {
     )
   })
   #<<< degree
+
+  #############################################################################
+  #############################################################################
+  # Trending >>>
+  #############################################################################
+  
+  #>>> trend
+  TdHeight <- function() {
+    input$sldHeightTd
+  }
+  TdWidth <- function() {
+    input$sldWidthTd
+  }
+  
+  # likert plot help function
+  likertHelper2 <- function(dataYrs, inType, titleYrs, inColors) {
+    # convert data format for likert data
+    pctYrs <- round(dataYrs[-1]/rowSums(dataYrs[-1])*100,2)
+
+    # (10/4/2019): hack for summary error -
+    #   "Error in data.frame(Item = results[, 1], low = low, neutral = neutral,  : 
+    #     object 'neutral' not found"
+    #   Add o=0 as artificial neutral field
+    if (inType == 'Gender') {
+      ldYrs <- data.frame(dataYrs[,1], Female=pctYrs$Female, .=0, Male=pctYrs$Male)
+    }
+    else {
+      ldYrs <- data.frame(dataYrs[,1], International=pctYrs$International, .=0, US=pctYrs$US)
+    }
+    
+    colnames(ldYrs)[1] <- "Item"
+    dcYrs = data.frame(ldYrs[,1], data.frame(rowSums(dataYrs[-1])))
+    colnames(dcYrs)[1] <- "Item"
+    colnames(dcYrs)[2] <- "Count"
+    
+    # likert plot
+    ltYrs <- likert(summary=ldYrs)
+    p <- plot(ltYrs, colors=inColors, ordered = FALSE, text.size=4) + ggtitle(titleYrs) + theme(plot.title = element_text(hjust = 0.5), axis.text=element_text(size=12,face="bold"))
+    p <- p + guides(fill=guide_legend(title=inType)) + geom_label(data=dcYrs, aes(x=Item, y = 1, label=Count))
+    p
+  }
+  
+  # trend title box
+  output$trendTitleBox<-renderUI({
+    if (input$selectTdPc == 1) {
+      box(
+        title = "TRENDS IN DEMOGRAPHICS DISTRIBUTION", width = 12, solidHeader = TRUE,
+        paste0("From ", minYrs, " to ", maxYrs, ", ", "the percentage of female NIEHS alumni increases steadly, ",
+          "from 38.1% in 2000-2004 to 51.9% in 2015-2019. And the percentage of international NIEHS alumni decreases gradually, ",
+          "from 51.5% in 2000-2004 to 43.5% in 2015-2019.")
+      )
+    }
+    else if (input$selectTdPc == 2) {
+      box(
+        title = "TRENDS IN JOB LOCATION", width = 12, solidHeader = TRUE,
+        paste0("From ", minYrs, " to ", maxYrs, ", ", "more and more NIEHS alumni found jobs in the United States, ",
+               "from 59.1% in 2000-2004 to 81.3% in 2015-2019. An increasing number of alumni worked in North Carolina after they finished training at NIEHS, ",
+               "from 24.1% in 2000-2004 to 51.9% in 2015-2019.")
+      )
+    }
+  })
+  
+  # trend control box
+  output$trendControlUI<-renderUI({
+    if (input$selectTdPc == 1) {
+      column(4, align="center",
+             selectInput("selectShowTrd", label = "Choose data to view:",
+                         choices = list("Gender only"=1, "Country origin only"=3, "Both"=2), selected = 2)
+      )
+    }
+    else if (input$selectTdPc == 2) {
+      column(4, align="center",
+             selectInput("selectShowTrd", label = "Choose data to view:",
+                         choices = list("All"=1, "General"=2, "Gender"=3, "Country Origin"=4), selected = 1)
+      )
+    }
+    else if (input$selectTdPc == 3) {
+      column(4, align="center",
+             selectInput("selectShowTrd", label = "Choose data to view:",
+                         choices = list("All"=1, "Job Sector"=2, "Job Type"=3, "Job Specifics"=4), selected = 1)
+      )
+    }
+    else if (input$selectTdPc == 4) {
+      column(4, align="center",
+             selectInput("selectShowTrd", label = "Choose data to view:",
+                         choices = list("Both"=1, "Tenure Track"=2, "Trainee"=3), selected = 1)
+      )
+    }
+    else if (input$selectTdPc == 5) {
+      column(4, align="center",
+             selectInput("selectShowTrd", label = "Choose data to view:",
+                         choices = list("All"=1, "Job Sector"=2, "Job Type"=3, "Job Specifics"=4, "Gender"=5), selected = 1)
+      )
+    }
+  })
+  
+  
+  ##### Demographics
+  # plot gender data
+  output$genderTrdLtPlot <- renderPlot({
+    titleTrd = paste0("Gender distribution trends \n", totalYrs)
+    likertHelper2(gendYrAll, 'Gender', titleTrd, genderColors_likert)
+  },height=TdHeight,width=TdWidth)
+  output$genderTrdLtTxt  <- renderText({HTML("<p><strong>Likert Plot of Gender Distribution Trends.</strong> 
+                                          Relative percentages of male and female NIEHS alumni in each time period. 
+                                          The sum of male and female percentages in each row equals 100%. The number in the middle of each row indicates total number of alumni in a time period.</p><p>&nbsp;</p>")})
+  
+  output$genderTrdLinePlot <- renderPlotly({
+    gendYrs.m <- tidyr::gather(gendYrAll, key, value, -years) %>% group_by(years) %>% mutate(value = value/sum(value))
+    colnames(gendYrs.m)[colnames(gendYrs.m)=="key"] <- "Gender"
+
+    p <- gendYrs.m %>% group_by(Gender) %>% plot_ly(x=~years, y=~value, color=~Gender, colors=genderColors,
+               type = 'scatter', mode = 'lines+markers',
+               hoverinfo = 'text',
+               text = paste(
+                  '</br> Gender: ', gendYrs.m$Gender,
+                  '</br> Years: ', gendYrs.m$years,
+                  '</br> Percentage: ', sprintf('%.2f', gendYrs.m$value*100), '%'
+               ),
+               width = input$sldWidthTd, height = input$sldHeightTd)
+    p <- p %>% layout(yaxis = list(tickformat="%", title='Percentage of Alumni', showline=TRUE, range = c(0, 0.8)), xaxis = list(title='Time Period', showline=TRUE))
+    p %>% config(displayModeBar = F)
+    
+    # p <- ggplot(data=gendYrs.m, aes(x=years, y=value, group=Gender)) +
+    #   geom_line(aes(color=Gender)) + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+    #   geom_point(aes(color=Gender)) + scale_y_continuous(labels=scales::percent, breaks=pretty_breaks(n=4), limits=c(0,0.8)) +
+    #   scale_color_manual(values=genderColors) + labs(x="Time Period", y="Percentage of Alumni")
+    # p <- p + theme_classic(base_size = 10)
+    # ggplotly(p,width = input$sldWidthTd, height = input$sldHeightTd) %>% config(displayModeBar = F) 
+  })
+  output$genderTrdLineTxt  <- renderText({HTML("<p><strong>Line Plot of Gender Distribution Trends.</strong> Percentage of male and female NIEHS alumni in each time period.</p><p>&nbsp;</p>")})
+  
+  # output gender table
+  output$genderTrdTable <- renderTable({
+    changeTableHeader(gendYrAll,c('Years','Female','Male'))
+  }, digits = 0)
+  
+  output$visitTrdLtPlot <- renderPlot({
+    titleTrd = paste0("Country origin distribution trends \n", totalYrs)
+    likertHelper2(citiYrAll, 'Country', titleTrd, visitColors_likert)
+  },height=TdHeight,width=TdWidth)
+  output$visitTrdLtTxt  <- renderText({HTML("<p><strong>Likert Plot of Country Origin Distribution.</strong> 
+                                          Relative percentages of US and international alumni in each time period. 
+                                          The sum of US and international percentages in each row equals 100%. The number in the middle of each row indicates total number of alumni in a time period.</p><p>&nbsp;</p>")})
+  
+  output$visitTrdLinePlot <- renderPlotly({
+    citiYrs.m <- tidyr::gather(citiYrAll, key, value, -years) %>% group_by(years) %>% mutate(value = value/sum(value))
+    colnames(citiYrs.m)[colnames(citiYrs.m)=="key"] <- "Origin"
+
+    p <- citiYrs.m %>% group_by(Origin) %>% plot_ly(x=~years, y=~value, color=~Origin, colors=visitColors,
+               type = 'scatter', mode = 'lines+markers',
+               hoverinfo = 'text',
+               text = paste(
+                  '</br> Country Origin: ', citiYrs.m$Origin,
+                  '</br> Years: ', citiYrs.m$years,
+                  '</br> Percentage: ', sprintf('%.2f', citiYrs.m$value*100), '%'
+               ),
+               width = input$sldWidthTd, height = input$sldHeightTd)
+    p <- p %>% layout(yaxis = list(tickformat="%", title='Percentage of Alumni', showline=TRUE, range = c(0, 0.8)), xaxis = list(title='Time Period', showline=TRUE))
+    p %>% config(displayModeBar = F)
+  })
+  output$visitTrdLineTxt  <- renderText({HTML("<p><strong>Line Plot of Country Origin Distribution.</strong> Percentage of US and international alumni in each time period.</p><p>&nbsp;</p>")})
+  
+  # output citizen table
+  output$visitTrdTable <- renderTable({
+    changeTableHeader(citiYrAll,c('Years','International','US'))
+  }, digits = 0)
+
+  
+  ##### Job location  
+  # summary job location data
+  locationHelper  <- function(dataIn) {
+    cntrLocData = dataIn
+    cntrLocData$job_country <- as.character(cntrLocData$job_country)
+    cntrLocData$job_country <- ifelse(cntrLocData$job_country == "United States","US (including NC)","Not_US")
+    statLocData = dataIn
+    statLocData$job_state <- as.character(statLocData$job_state)
+    statLocData$job_state <- ifelse(statLocData$job_state == "North Carolina","NC","Not_NC")
+  
+    cntrYrAll <- cntrLocData %>% group_by(years,job_country) %>% summarise (cnt = n()) %>% mutate(cnt=cnt/sum(cnt)) 
+    statYrAll <- statLocData %>% group_by(years,job_state) %>% summarise (cnt = n()) %>% mutate(cnt=cnt/sum(cnt)) 
+  
+    cntrYrUS <- cntrYrAll %>% filter(job_country == 'US (including NC)') %>% rename(job_location = job_country, portion = cnt)
+    statYrNC <- statYrAll %>% filter(job_state == 'NC') %>% rename(job_location = job_state, portion = cnt)
+  
+    locationYr <- dplyr::bind_rows(cntrYrUS, statYrNC)
+    locationYr$job_location <- factor(locationYr$job_location)
+    locationYr
+  }
+  
+  # job location trends of all
+  output$locationTrdPlotAll <- renderPlotly({
+    locationYr <- locationHelper(dataGroup)
+
+    p <- locationYr %>% group_by(job_location) %>% plot_ly(x=~years, y=~portion, linetype=~job_location, color=~job_location, colors=c("#ffb84d","#6cc06d"),
+                type = 'scatter', mode = 'lines+markers',
+                hoverinfo = 'text',
+                text = paste(
+                   '</br> Job Location: ', locationYr$job_location,
+                   '</br> Years: ', locationYr$years,
+                   '</br> Percentage: ', sprintf('%.2f', locationYr$portion*100), '%'
+                ),
+                width = input$sldWidthTd, height = input$sldHeightTd)
+    p <- p %>% layout(yaxis = list(tickformat="%", title='Percentage of Alumni', showline=TRUE, range = c(0, 1)), xaxis = list(title='Time Period', showline=TRUE))
+    p %>% config(displayModeBar = F)
+  })
+  output$locationTrdTxtAll <- renderText({HTML("<p><strong>Job Location Trends of All Alumni.</strong> Relative percentage of NIEHS alumni who worked in the United States and North Carolina in each time period.</p><p>&nbsp;</p>")})
+  
+  # output location all table
+  output$locationTrdTableAll <- renderTable({
+    locationYr <- locationHelper(dataGroup)
+    locYrAll <- locationYr %>% tidyr::spread(job_location, portion, fill=0)
+    changeTableHeader(locYrAll,c('Years','NC','US (including NC)'))
+  }, digits = 3)
+  
+  # job location trends by gender
+  output$locationTrdPlotGender <- renderPlotly({
+    dataMale <- dplyr::filter(dataGroup, gender == 'Male')
+    locationYrMale <- locationHelper(dataMale)
+    locationYrMale$gender <- 'Male'
+    dataFemale <- dplyr::filter(dataGroup, gender == 'Female')
+    locationYrFemale <- locationHelper(dataFemale)
+    locationYrFemale$gender <- 'Female'
+    locationYr <- dplyr::bind_rows(locationYrMale, locationYrFemale)
+    
+    p <- locationYr %>% group_by(gender,job_location) %>% plot_ly(x=~years, y=~portion, color=~gender, colors=genderColors, 
+                 linetype=~job_location, type = 'scatter', mode = 'lines+markers',
+                 hoverinfo = 'text',
+                 text = paste(
+                   '</br> Gender: ', locationYr$gender,
+                   '</br> Job Location: ', locationYr$job_location,
+                   '</br> Years: ', locationYr$years,
+                   '</br> Percentage: ', sprintf('%.2f', locationYr$portion*100), '%'
+                 ),
+                 width = input$sldWidthTd, height = input$sldHeightTd)
+    p <- p %>% layout(yaxis = list(tickformat="%", title='Percentage of Alumni', showline=TRUE, range = c(0, 1)), xaxis = list(title='Time Period', showline=TRUE))
+    p %>% config(displayModeBar = F)
+  })
+  output$locationTrdTxtGender  <- renderText({HTML("<p><strong>Job Location Trends by Gender.</strong> Relative percentage of NIEHS alumni (female vs. male) who worked in the United States and North Carolina in each time period.</p><p>&nbsp;</p>")})
+  # output location gender table
+  output$locationTrdTableGender <- renderTable({
+    dataMale <- dplyr::filter(dataGroup, gender == 'Male')
+    locationYrMale <- locationHelper(dataMale)
+    locationYrMale$gender <- 'Male'
+    dataFemale <- dplyr::filter(dataGroup, gender == 'Female')
+    locationYrFemale <- locationHelper(dataFemale)
+    locationYrFemale$gender <- 'Female'
+    locationYr <- dplyr::bind_rows(locationYrMale, locationYrFemale)  
+    locYrGen <- locationYr %>% tidyr::spread(job_location, portion, fill=0)
+    changeTableHeader(locYrGen,c('Years','Gender','NC','US (including NC)'))
+  }, digits = 3)
+  
+  # job location trends by country origin
+  output$locationTrdPlotCountry <- renderPlotly({
+    cntrData = dataGroup
+    cntrData$country_origin <- as.character(cntrData$country_origin)
+    cntrData$country_origin <- ifelse(cntrData$country_origin == "United States","US","Not_US")
+    
+    dataUS <- dplyr::filter(cntrData, country_origin == 'US')
+    locationYrUS <- locationHelper(dataUS)
+    locationYrUS$country_origin <- 'US'
+    dataNUS <- dplyr::filter(cntrData, country_origin == 'Not_US')
+    locationYrNUS <- locationHelper(dataNUS)
+    locationYrNUS$country_origin <- 'International'
+    locationYr <- dplyr::bind_rows(locationYrUS, locationYrNUS)
+    
+    p <- locationYr %>% group_by(country_origin,job_location) %>% plot_ly(x=~years, y=~portion, color=~country_origin, colors=visitColors, 
+                linetype=~job_location, type = 'scatter', mode = 'lines+markers',
+                hoverinfo = 'text',
+                text = paste(
+                   '</br> Country Origin: ', locationYr$country_origin,
+                   '</br> Job Location: ', locationYr$job_location,
+                   '</br> Years: ', locationYr$years,
+                   '</br> Percentage: ', sprintf('%.2f', locationYr$portion*100), '%'
+                ),
+                width = input$sldWidthTd, height = input$sldHeightTd)
+    p <- p %>% layout(yaxis = list(tickformat="%", title='Percentage of Alumni', showline=TRUE, range = c(0, 1)), xaxis = list(title='Time Period', showline=TRUE))
+    p %>% config(displayModeBar = F)
+  })
+  output$locationTrdTxtCountry  <- renderText({HTML("<p><strong>Job Location Trends by Country Origin.</strong> Relative percentage of NIEHS alumni (International vs. US) who worked in the United States and North Carolina in each time period.</p><p>&nbsp;</p>")})
+  # output location origin table
+  output$locationTrdTableCountry <- renderTable({
+    cntrData = dataGroup
+    cntrData$country_origin <- as.character(cntrData$country_origin)
+    cntrData$country_origin <- ifelse(cntrData$country_origin == "United States","US","Not_US")
+    
+    dataUS <- dplyr::filter(cntrData, country_origin == 'US')
+    locationYrUS <- locationHelper(dataUS)
+    locationYrUS$country_origin <- 'US'
+    dataNUS <- dplyr::filter(cntrData, country_origin == 'Not_US')
+    locationYrNUS <- locationHelper(dataNUS)
+    locationYrNUS$country_origin <- 'International'
+    locationYr <- dplyr::bind_rows(locationYrUS, locationYrNUS)
+    locYrCtry <- locationYr %>% tidyr::spread(job_location, portion, fill=0)
+    changeTableHeader(locYrCtry,c('Years','Country_Origin','NC','US (including NC)'))
+  }, digits = 3)
+  
+  
+  ##### Career trend
+  # job sector trends
+  output$careerTrdPlotSect <- renderPlotly({
+    p <- dfJobSectYrs %>% group_by(Sector) %>% plot_ly(x=~years, y=~Postdoc, color=~Sector, colors=colorJSect, 
+                  type = 'scatter', mode = 'lines+markers',
+                  hoverinfo = 'text',
+                  text = paste(
+                     '</br> Job Sector: ', dfJobSectYrs$Sector,
+                     '</br> Years: ', dfJobSectYrs$years,
+                     '</br> Percentage: ', sprintf('%.2f', dfJobSectYrs$Postdoc*100), '%'
+                  ),
+                  width = input$sldWidthTd, height = input$sldHeightTd)
+    p <- p %>% layout(yaxis = list(tickformat="%", title='Percentage of Alumni', showline=TRUE, range = c(0, 0.6)), xaxis = list(title='Time Period', showline=TRUE))
+    p %>% config(displayModeBar = F)
+  })
+  output$careerTrdTxtSect <- renderText({HTML("<p><strong>Career Trends by Job Sector</strong> Relative percentage of NIEHS alumni with a given career outcome (Job Sector) in each time period.</p><p>&nbsp;</p>")})
+  output$careerTrdTableSect <- renderTable({
+    changeTableHeader(dfJobSectYrs,c('Years','Job_Sector','Alumni_Count','Portion'))
+  })
+  
+  # job type trends
+  output$careerTrdPlotType <- renderPlotly({
+    p <- dfJobTypeYrs %>% group_by(Type) %>% plot_ly(x=~years, y=~Postdoc, color=~Type, colors=colorJType, 
+                  type = 'scatter', mode = 'lines+markers',
+                  hoverinfo = 'text',
+                  text = paste(
+                     '</br> Job Type: ', dfJobTypeYrs$Type,
+                     '</br> Years: ', dfJobTypeYrs$years,
+                     '</br> Percentage: ', sprintf('%.2f', dfJobTypeYrs$Postdoc*100), '%'
+                  ),
+                  width = input$sldWidthTd, height = input$sldHeightTd)
+    p <- p %>% layout(yaxis = list(tickformat="%", title='Percentage of Alumni', showline=TRUE, range = c(0, 0.6)), xaxis = list(title='Time Period', showline=TRUE))
+    p %>% config(displayModeBar = F)
+  })
+  output$careerTrdTxtType <- renderText({HTML("<p><strong>Career Trends by Job Type</strong> Relative percentage of NIEHS alumni with a given career outcome (Job Type) in each time period.</p><p>&nbsp;</p>")})
+  output$careerTrdTableType <- renderTable({
+    changeTableHeader(dfJobTypeYrs,c('Years','Job_Type','Alumni_Count','Portion'))
+  })
+
+  # job specifics trends
+  output$careerTrdPlotSpec <- renderPlotly({
+    p <- dfJobSpecYrs %>% group_by(Specifics) %>% plot_ly(x=~years, y=~Postdoc, color=~Specifics, colors=colorJSpec, 
+                   type = 'scatter', mode = 'lines+markers',
+                   hoverinfo = 'text',
+                   text = paste(
+                      '</br> Job Specifics: ', dfJobSpecYrs$Specifics,
+                      '</br> Years: ', dfJobSpecYrs$years,
+                      '</br> Percentage: ', sprintf('%.2f', dfJobSpecYrs$Postdoc*100), '%'
+                   ),
+                    width = input$sldWidthTd, height = input$sldHeightTd)
+    p <- p %>% layout(yaxis = list(tickformat="%", title='Percentage of Alumni', showline=TRUE, range = c(0, 0.6)), xaxis = list(title='Time Period', showline=TRUE))
+    p %>% config(displayModeBar = F)
+  })
+  output$careerTrdTxtSpec <- renderText({HTML("<p><strong>Career Trends by Job Specifics</strong> Relative percentage of NIEHS alumni with a given career outcome (Job Specifics) in each time period.</p><p>&nbsp;</p>")})
+  output$careerTrdTableSpec <- renderTable({
+    changeTableHeader(dfJobSpecYrs,c('Years','Job_Specifics','Alumni_Count','Portion'))
+  })
+
+  
+  ##### Highlight trend
+  # highlight color
+  colorHighlight <- c("Intn'l alumni abroad"="#867cb6",
+                      "Intn'l alumni in US"="#b82e91",
+                      "US alumni abroad"="#54b649",
+                      "US alumni in US"="#2f9d49")
+
+  # helper function
+  highlightHelper <- function(hlType) {
+    hlData <- dataGroup %>% filter(job_type == hlType)
+    hlData$job_country = as.character(hlData$job_country)
+    hlData$job_country[(hlData$job_country != 'United States') & (hlData$citizenship == 'International')] = "Intn'l alumni abroad"
+    hlData$job_country[(hlData$job_country != 'United States') & (hlData$citizenship == 'US')] = "US alumni abroad"
+    hlData$job_country[(hlData$job_country == 'United States') & (hlData$citizenship == 'International')] = "Intn'l alumni in US"
+    hlData$job_country[(hlData$job_country == 'United States') & (hlData$citizenship == 'US')] = "US alumni in US"
+    hlData$job_country = factor(hlData$job_country)
+    hlData_tbl <- hlData %>% group_by(years, citizenship, job_country) %>% summarise(cnt = n())
+    hlData_tbl <- data.frame(hlData_tbl) %>% group_by(years) %>% mutate(Percentage=cnt/sum(cnt))
+    hlData_slt <- hlData_tbl %>% select(years, job_country, Percentage) %>% tidyr::spread(job_country, Percentage, fill=0)
+    hlData_out <- hlData_slt %>% tidyr::gather(key, value, -years)
+    hlData_out %>% rename(job_country = key, Percentage = value) %>% dplyr::arrange(years, job_country)
+  }
+  
+  # tenure track trends
+  output$tenureTrdPlot <- renderPlotly({
+    dfTenure = highlightHelper('Tenure track faculty')
+    p <- dfTenure %>% group_by(job_country) %>% plot_ly(x=~years, y=~Percentage, color=~job_country, colors=colorHighlight, 
+                  type = 'scatter', mode = 'lines+markers',
+                  hoverinfo = 'text',
+                  text = paste(
+                     '</br> Job Country: ', dfTenure$job_country,
+                     '</br> Years: ', dfTenure$years,
+                     '</br> Percentage: ', sprintf('%.2f', dfTenure$Percentage*100), '%'
+                  ),
+                  width = input$sldWidthTd, height = input$sldHeightTd)
+    p <- p %>% layout(yaxis = list(tickformat="%", title='Percentage of Alumni', showline=TRUE, range = c(0, 0.5)), xaxis = list(title='Time Period', showline=TRUE))
+    p %>% config(displayModeBar = F)
+  })
+  output$tenureTrdTxt <- renderText({HTML("<p><strong>Highlight Trends of Tenure Track Faculty</strong> Relative percentage of NIEHS alumni who enter tenure-track faculty positions in each time period. 
+                                          We examined the relative proportion of U.S. versus international scholars in tenure-track (TT) positions: international scholars with a TT position abroad (dark purple), international scholars with a TT position in the U.S. (light magenta), the U.S. scholars with a TT position in the U.S. (dark green), and the U.S. scholars with a TT position abroad (green). Note in each time period, the sum of these TT positions equals to 100%.</p><p>&nbsp;</p>")})
+  output$tenureTrdTable <- renderTable({ 
+    tenuTrend <- highlightHelper('Tenure track faculty')
+    changeTableHeader(tenuTrend,c('Years','Job_Country','Portion'))
+  })
+  
+  # trainee trends
+  output$traineeTrdPlot <- renderPlotly({
+    dfTenure = highlightHelper('Trainee')
+
+    p <- dfTenure %>% group_by(job_country) %>% plot_ly(x=~years, y=~Percentage, color=~job_country, colors=colorHighlight, 
+               type = 'scatter', mode = 'lines+markers',
+               hoverinfo = 'text',
+               text = paste(
+                  '</br> Job Country: ', dfTenure$job_country,
+                  '</br> Years: ', dfTenure$years,
+                  '</br> Percentage: ', sprintf('%.2f', dfTenure$Percentage*100), '%'
+               ),
+               width = input$sldWidthTd, height = input$sldHeightTd)
+    p <- p %>% layout(yaxis = list(tickformat="%", title='Percentage of Alumni', showline=TRUE, range = c(0, 0.8)), xaxis = list(title='Time Period', showline=TRUE))
+    p %>% config(displayModeBar = F)
+  })
+  output$traineeTrdTxt <- renderText({HTML("<p><strong>Highlight Trends of Trainee</strong> Relative percentage of NIEHS alumni who enter additional trainee positions in each time period. 
+                                           We examined the relative proportion of U.S. versus international scholars taking additional training: international scholars with additional training abroad (dark purple), international scholars with additional training in the U.S. (light magenta), the U.S. scholars with additional training in the U.S. (dark green), and the U.S. scholars with additional training abroad (green). Note in each time period, the sum of these TT positions equals to 100%.</p><p>&nbsp;</p>")})
+  output$traineeTrdTable <- renderTable({
+    traiTrend <- highlightHelper('Trainee')
+    changeTableHeader(traiTrend,c('Years','Job_Country','Portion'))
+  })
+  
+    
+  
+  ##### Training time trend
+  # Training time job sector trends
+  output$timeTrdPlotSect <- renderPlotly({
+    p <- dfTimeSectYrs %>% group_by(job_sector) %>% plot_ly(x=~years, y=~avg_time, color=~job_sector, colors=colorJSect, 
+                type = 'scatter', mode = 'lines+markers',
+                hoverinfo = 'text',
+                text = paste(
+                   '</br> Job Sector: ', dfTimeSectYrs$job_sector,
+                   '</br> Years: ', dfTimeSectYrs$years,
+                   '</br> Avg. Time: ', sprintf('%.1f', dfTimeSectYrs$avg_time), ' months'
+                ),
+                width = input$sldWidthTd, height = input$sldHeightTd)
+    p <- p %>% layout(yaxis = list(title='Training Time (months)', showline=TRUE, range=c(0,60)), xaxis = list(title='Time Period', showline=TRUE))
+    p %>% config(displayModeBar = F)
+  })
+  output$timeTrdTxtSect <- renderText({HTML("<p><strong>Training Time Trends by Job Sector</strong> Average training time of NIEHS alumni with a given career outcome (Job Sector) in each time period.</p><p>&nbsp;</p>")})
+  output$timeTrdTableSect <- renderTable({
+    changeTableHeader(dfTimeSectYrs,c('Years','Job_Sector',	'Avg_Time',	'Min_Time',	'Max_Time',	'Alumni_Count'))
+  })
+  
+  # Training time job type trends
+  output$timeTrdPlotType <- renderPlotly({
+    p <- dfTimeTypeYrs %>% group_by(job_type) %>% plot_ly(x=~years, y=~avg_time, color=~job_type, colors=colorJType, 
+                   type = 'scatter', mode = 'lines+markers',
+                   hoverinfo = 'text',
+                   text = paste(
+                      '</br> Job Type: ', dfTimeTypeYrs$job_type,
+                      '</br> Years: ', dfTimeTypeYrs$years,
+                      '</br> Avg. Time: ', sprintf('%.1f', dfTimeTypeYrs$avg_time), ' months'
+                   ),
+                   width = input$sldWidthTd, height = input$sldHeightTd)
+    p <- p %>% layout(yaxis = list(title='Training Time (months)', showline=TRUE, range=c(0,85)), xaxis = list(title='Time Period', showline=TRUE))
+    p %>% config(displayModeBar = F)
+  })
+  output$timeTrdTxtType <- renderText({HTML("<p><strong>Training Time Trends by Job Type</strong> Average training time of NIEHS alumni with a given career outcome (Job Type) in each time period.</p><p>&nbsp;</p>")})
+  output$timeTrdTableType <- renderTable({
+    changeTableHeader(dfTimeTypeYrs,c('Years','Job_Type',	'Avg_Time',	'Min_Time',	'Max_Time',	'Alumni_Count'))
+  })
+  
+  # Training time job specifics trends
+  output$timeTrdPlotSpec <- renderPlotly({
+    p <- dfTimeSpecYrs %>% group_by(specifics) %>% plot_ly(x=~years, y=~avg_time, color=~specifics, colors=colorJSpec, 
+                   type = 'scatter', mode = 'lines+markers',
+                   hoverinfo = 'text',
+                   text = paste(
+                      '</br> Job Specifics: ', dfTimeSpecYrs$specifics,
+                      '</br> Years: ', dfTimeSpecYrs$years,
+                      '</br> Avg. Time: ', sprintf('%.1f', dfTimeSpecYrs$avg_time), ' months'
+                   ),
+                   width = input$sldWidthTd, height = input$sldHeightTd)
+    p <- p %>% layout(yaxis = list(title='Training Time (months)', showline=TRUE, range=c(0,70)), xaxis = list(title='Time Period', showline=TRUE))
+    p %>% config(displayModeBar = F)
+  })
+  output$timeTrdTxtSpec <- renderText({HTML("<p><strong>Training Time Trends by Job Specifics</strong> Average training time of NIEHS alumni with a given career outcome (Job Specifics) in each time period.</p><p>&nbsp;</p>")})
+  output$timeTrdTableSpec <- renderTable({
+    changeTableHeader(dfTimeSpecYrs,c('Years','Job_Specifics',	'Avg_Time',	'Min_Time',	'Max_Time',	'Alumni_Count'))
+  })
+  
+  # Training time gender trends
+  output$timeTrdPlotGend <- renderPlotly({
+    p <- gendTimeGrp %>% group_by(gender) %>% plot_ly(x=~years, y=~avg_time, color=~gender, colors=genderColors, 
+                   type = 'scatter', mode = 'lines+markers',
+                   hoverinfo = 'text',
+                   text = paste(
+                      '</br> Gender: ', gendTimeGrp$gender,
+                      '</br> Years: ', gendTimeGrp$years,
+                      '</br> Avg. Time: ', sprintf('%.1f', gendTimeGrp$avg_time), ' months'
+                   ),
+                   width = input$sldWidthTd, height = input$sldHeightTd)
+    p <- p %>% layout(yaxis = list(title='Training Time (months)', showline=TRUE, range=c(0,60)), xaxis = list(title='Time Period', showline=TRUE))
+    p %>% config(displayModeBar = F)
+  })
+  output$timeTrdTxtGend <- renderText({HTML("<p><strong>Training Time Trends by Gender</strong> Average training time of NIEHS alumni by gender in each time period.</p><p>&nbsp;</p>")})
+  output$timeTrdTableGend <- renderTable({
+    changeTableHeader(gendTimeGrp,c('Years','Gender',	'Avg_Time',	'Min_Time',	'Max_Time',	'Alumni_Count'))
+  })
+  
+  
+  # trend plot box
+  output$trendDynamicUI<-renderUI({
+    if (input$selectTdPc == 1) {
+      # zoom gender plot
+      if (input$selectShowTrd == 1) {
+        fluidRow(
+          tabBox(
+            title = "Gender", width = 12,
+            # The id lets us use input$tabset3 on the server to find the current tab
+            id = "tab_genderTrd",
+            tabPanel("Gender Likert plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", htmlOutput("genderTrdLtTxt"), plotOutput("genderTrdLtPlot")),
+            tabPanel("Gender line plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", htmlOutput("genderTrdLineTxt"), plotlyOutput("genderTrdLinePlot")),
+            tabPanel("Gender data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("genderTrdTable"))
+          )
+        )
+      }
+      # zoom visiting plot
+      else if (input$selectShowTrd == 3) {
+        fluidRow(
+          tabBox(
+            title = "Country origin", width = 12,
+            # The id lets us use input$tabset4 on the server to find the current tab
+            id = "tab_visitTrd",
+            tabPanel("Origin Likert plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", htmlOutput("visitTrdLtTxt"), plotOutput("visitTrdLtPlot")),
+            tabPanel("Origin bar chart", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", htmlOutput("visitTrdLineTxt"), plotOutputly("visitTrdLinePlot")),
+            tabPanel("Origin data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("visitTrdTable"))
+          )
+        )
+      }
+      # default to show both
+      else {
+        fluidRow(
+          tabBox(
+            title = "Gender", width = 6,
+            # The id lets us use input$tab_genderSml on the server to find the current tab
+            id = "tab_genderSmlTrd",
+            tabPanel("Gender Likert plot", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("genderTrdLtTxt"), plotOutput("genderTrdLtPlot")),
+            tabPanel("Gender line plot", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("genderTrdLineTxt"), plotlyOutput("genderTrdLinePlot")),
+            tabPanel("Gender data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 500px", tableOutput("genderTrdTable"))
+          ),
+          tabBox(
+            title = "Country origin", width = 6,
+            # The id lets us use input$tab_visitSml on the server to find the current tab
+            id = "tab_visitSmlTrd",
+            tabPanel("Origin Likert plot", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("visitTrdLtTxt"), plotOutput("visitTrdLtPlot")),
+            tabPanel("Origin line plot", style = "overflow-x:scroll; overflow-y:scroll; height: 500px", htmlOutput("visitTrdLineTxt"), plotlyOutput("visitTrdLinePlot")),
+            tabPanel("Origin data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 500px", tableOutput("visitTrdTable"))
+          )
+        )
+      }
+    }
+    else if (input$selectTdPc == 2) {
+      # zoom gender plot
+      if (input$selectShowTrd == 2) {
+        fluidRow(
+          tabBox(
+            title = "Job location (General)", width = 12,
+            # The id lets us use input$tabset3 on the server to find the current tab
+            id = "tab_LocTrdAll",
+            tabPanel("General plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("locationTrdTxtAll"), plotlyOutput("locationTrdPlotAll")),
+            tabPanel("General data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("locationTrdTableAll"))
+          )
+        )
+      }
+      # zoom visiting plot
+      else if (input$selectShowTrd == 3) {
+        fluidRow(
+          tabBox(
+            title = "Job location (Gender)", width = 12,
+            # The id lets us use input$tabset3 on the server to find the current tab
+            id = "tab_LocTrdGender",
+            tabPanel("Gender plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("locationTrdTxtGender"), plotlyOutput("locationTrdPlotGender")),
+            tabPanel("Gender data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("locationTrdTableGender"))
+          )
+        )
+      }
+      else if (input$selectShowTrd == 4) {
+        fluidRow(
+          tabBox(
+            title = "Job location (Country origin)", width = 12,
+            # The id lets us use input$tabset3 on the server to find the current tab
+            id = "tab_LocTrdCountry",
+            tabPanel("Country origin plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("locationTrdTxtCountry"), plotlyOutput("locationTrdPlotCountry")),
+            tabPanel("Country origin data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("locationTrdTableCountry"))
+          )
+        )
+      }
+      # default to show all
+      else {
+        fluidRow(
+          column(width = 12,
+            tabBox(
+              title = "Job location (General)", width = 6,
+              # The id lets us use input$tabset3 on the server to find the current tab
+              id = "tab_LocSmlTrdAll",
+              tabPanel("General plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("locationTrdTxtAll"), plotlyOutput("locationTrdPlotAll")),
+              tabPanel("General data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("locationTrdTableAll"))
+            ),
+            tabBox(
+              title = "Job location (Gender)", width = 6,
+              # The id lets us use input$tabset3 on the server to find the current tab
+              id = "tab_LocSmlTrdGender",
+              tabPanel("Gender plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("locationTrdTxtGender"), plotlyOutput("locationTrdPlotGender")),
+              tabPanel("Gender data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("locationTrdTableGender"))
+            )
+          ),
+          column(width = 12,
+            tabBox(
+              title = "Job location (Country origin)", width = 6,
+              # The id lets us use input$tabset3 on the server to find the current tab
+              id = "tab_LocTrdCountry",
+              tabPanel("Country origin plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("locationTrdTxtCountry"), plotlyOutput("locationTrdPlotCountry")),
+              tabPanel("Country origin data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("locationTrdTableCountry"))
+            )
+          )
+        )
+      }
+    }
+    else if (input$selectTdPc == 3) {
+      # zoom gender plot
+      if (input$selectShowTrd == 2) {
+        fluidRow(
+          tabBox(
+            title = "Job sector", width = 12,
+            # The id lets us use input$tabset3 on the server to find the current tab
+            id = "tab_careerTrdSect",
+            tabPanel("Sector plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("careerTrdTxtSect"), plotlyOutput("careerTrdPlotSect")),
+            tabPanel("Sector data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("careerTrdTableSect"))
+          )
+        )
+      }
+      # zoom visiting plot
+      else if (input$selectShowTrd == 3) {
+        fluidRow(
+          tabBox(
+            title = "Job type", width = 12,
+            # The id lets us use input$tabset3 on the server to find the current tab
+            id = "tab_careerTrdType",
+            tabPanel("Type plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("careerTrdTxtType"), plotlyOutput("careerTrdPlotType")),
+            tabPanel("Type data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("careerTrdTableType"))
+          )
+        )
+      }
+      else if (input$selectShowTrd == 4) {
+        fluidRow(
+          tabBox(
+            title = "Job specifics", width = 12,
+            # The id lets us use input$tabset3 on the server to find the current tab
+            id = "tab_careerTrdSpec",
+            tabPanel("Specifics plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("careerTrdTxtSpec"), plotlyOutput("careerTrdPlotSpec")),
+            tabPanel("Specifics data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("careerTrdTableSpec"))
+          )
+        )
+      }
+      # default to show all
+      else {
+        fluidRow(
+          column(width = 12,
+                 tabBox(
+                   title = "Job sector", width = 6,
+                   # The id lets us use input$tabset3 on the server to find the current tab
+                   id = "tab_careerSmlTrdSect",
+                   tabPanel("Sector plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("careerTrdTxtSect"), plotlyOutput("careerTrdPlotSect")),
+                   tabPanel("Sector data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("careerTrdTableSect"))
+                 ),
+                 tabBox(
+                   title = "Job type", width = 6,
+                   # The id lets us use input$tabset3 on the server to find the current tab
+                   id = "tab_careerSmlTrdType",
+                   tabPanel("Type plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("careerTrdTxtType"), plotlyOutput("careerTrdPlotType")),
+                   tabPanel("Type data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("careerTrdTableType"))
+                 )
+          ),
+          column(width = 12,
+                 tabBox(
+                   title = "Job specifics", width = 6,
+                   # The id lets us use input$tabset3 on the server to find the current tab
+                   id = "tab_careerSmlTrdSpec",
+                   tabPanel("Specifics plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("careerTrdTxtSpec"), plotlyOutput("careerTrdPlotSpec")),
+                   tabPanel("Specifics data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("careerTrdTableSpec"))
+                 )
+          )
+        )
+      }
+    }
+    else if (input$selectTdPc == 4) {
+      # zoom gender plot
+      if (input$selectShowTrd == 2) {
+        fluidRow(
+          tabBox(
+            title = "Tenure track", width = 12,
+            # The id lets us use input$tabset3 on the server to find the current tab
+            id = "tab_tenureTrd",
+            tabPanel("Faculty plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", htmlOutput("tenureTrdTxt"), plotlyOutput("tenureTrdPlot")),
+            tabPanel("Faculty data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("tenureTrdTable"))
+          )
+        )
+      }
+      # zoom visiting plot
+      else if (input$selectShowTrd == 3) {
+        fluidRow(
+          tabBox(
+            title = "Trainee", width = 12,
+            # The id lets us use input$tabset3 on the server to find the current tab
+            id = "tab_tenureTrd",
+            tabPanel("Trainee plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", htmlOutput("traineeTrdTxt"), plotlyOutput("traineeTrdPlot")),
+            tabPanel("Trainee data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("traineeTrdTable"))
+          )
+        )
+      }
+      # default to show both
+      else {
+        fluidRow(
+          tabBox(
+            title = "Tenure track", width = 6,
+            # The id lets us use input$tabset3 on the server to find the current tab
+            id = "tab_tenureSmlTrd",
+            tabPanel("Faculty plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", htmlOutput("tenureTrdTxt"), plotlyOutput("tenureTrdPlot")),
+            tabPanel("Faculty data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("tenureTrdTable"))
+          ),
+          tabBox(
+            title = "Trainee", width = 6,
+            # The id lets us use input$tabset3 on the server to find the current tab
+            id = "tab_tenureSmlTrd",
+            tabPanel("Trainee plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", htmlOutput("traineeTrdTxt"), plotlyOutput("traineeTrdPlot")),
+            tabPanel("Trainee data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("traineeTrdTable"))
+          )
+        )
+      }
+    }
+    else if (input$selectTdPc == 5) {
+      # zoom gender plot
+      if (input$selectShowTrd == 2) {
+        fluidRow(
+          tabBox(
+            title = "Training time (Job sector)", width = 12,
+            # The id lets us use input$tabset3 on the server to find the current tab
+            id = "tab_timeTrdSect",
+            tabPanel("Time plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("timeTrdTxtSect"), plotlyOutput("timeTrdPlotSect")),
+            tabPanel("Time data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("timeTrdTableSect"))
+          )
+        )
+      }
+      # zoom visiting plot
+      else if (input$selectShowTrd == 3) {
+        fluidRow(
+          tabBox(
+            title = "Training time (Job type)", width = 12,
+            # The id lets us use input$tabset3 on the server to find the current tab
+            id = "tab_timeTrdType",
+            tabPanel("Time plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("timeTrdTxtType"), plotlyOutput("timeTrdPlotType")),
+            tabPanel("Time data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("timeTrdTableType"))
+          )
+        )
+      }
+      else if (input$selectShowTrd == 4) {
+        fluidRow(
+          tabBox(
+            title = "Training time (Job specifics)", width = 12,
+            # The id lets us use input$tabset3 on the server to find the current tab
+            id = "tab_timeTrdSpec",
+            tabPanel("Time plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("timeTrdTxtSpec"), plotlyOutput("timeTrdPlotSpec")),
+            tabPanel("Time data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("timeTrdTableSpec"))
+          )
+        )
+      }
+      else if (input$selectShowTrd == 5) {
+        fluidRow(
+          tabBox(
+            title = "Training time (Gender)", width = 12,
+            # The id lets us use input$tabset3 on the server to find the current tab
+            id = "tab_timeTrdGend",
+            tabPanel("Time plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("timeTrdTxtGend"), plotlyOutput("timeTrdPlotGend")),
+            tabPanel("Time data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("timeTrdTableGend"))
+          )
+        )
+      }
+      # default to show all
+      else {
+        fluidRow(
+          column(width = 12,
+                 tabBox(
+                   title = "Training time (Job sector)", width = 6,
+                   # The id lets us use input$tabset3 on the server to find the current tab
+                   id = "tab_timeSmlTrdSect",
+                   tabPanel("Time plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("timeTrdTxtSect"), plotlyOutput("timeTrdPlotSect")),
+                   tabPanel("Time data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("timeTrdTableSect"))
+                 ),
+                 tabBox(
+                   title = "Training time (Job type)", width = 6,
+                   # The id lets us use input$tabset3 on the server to find the current tab
+                   id = "tab_timeSmlTrdType",
+                   tabPanel("Time plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("timeTrdTxtType"), plotlyOutput("timeTrdPlotType")),
+                   tabPanel("Time data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("timeTrdTableType"))
+                 )
+          ),
+          column(width = 12,
+                 tabBox(
+                   title = "Training time (Job specifics)", width = 6,
+                   # The id lets us use input$tabset3 on the server to find the current tab
+                   id = "tab_timeSmlTrdSpec",
+                   tabPanel("Time plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("timeTrdTxtSpec"), plotlyOutput("timeTrdPlotSpec")),
+                   tabPanel("Time data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("timeTrdTableSpec"))
+                 ),
+                 tabBox(
+                   title = "Training time (Gender)", width = 6,
+                   # The id lets us use input$tabset3 on the server to find the current tab
+                   id = "tab_timeSmlTrdGend",
+                   tabPanel("Time plot", style = "overflow-x:scroll; overflow-y:scroll; max-height: 1800px", htmlOutput("timeTrdTxtGend"), plotlyOutput("timeTrdPlotGend")),
+                   tabPanel("Time data", style = "overflow-x:scroll; overflow-y:scroll; max-height: 800px", tableOutput("timeTrdTableGend"))
+                 )
+          )
+        )
+      }
+    }
+  })
+  
+  
+  
+  #<<< trend
   
   
   #############################################################################
